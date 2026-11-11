@@ -6,6 +6,12 @@ export const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency',
 /** Cor fixa de cada pessoa: a primeira é azul, a segunda é rosa. */
 export const cor = (q: 'eu' | 'par') => (q === 'eu' ? 'azul' : 'rosa')
 
+/** Nome do mês de 'AAAA-MM': "novembro" ou, no formato curto, "nov". */
+export function nomeDoMes(mes: string, formato: 'long' | 'short' = 'long') {
+  const [a, m] = mes.split('-').map(Number)
+  return new Date(a, m - 1, 1).toLocaleDateString('pt-BR', { month: formato }).replace('.', '')
+}
+
 export const pct = (parte: number, total: number) => (total > 0 ? Math.round((parte / total) * 100) : 0)
 
 /** Aceita "1.234,56", "1234,56" e "1234.56". */

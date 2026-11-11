@@ -1,4 +1,4 @@
-import type { Estado, Quem } from './store'
+import { difMeses, mesAtual, type Cartao, type Compra, type Conta, type Estado, type Quem } from './store'
 
 const soma = (l: { valor: number }[]) => l.reduce((s, c) => s + c.valor, 0)
 
@@ -8,6 +8,52 @@ export interface ItemAPagar {
   valor: number
   dia: number
   pago: boolean
+}
+
+/** Valor da conta num mês: o ajuste daquele mês, se houver, ou o valor padrão. */
+export const valorNoMes = (c: Conta, mes: string) => c.ajustes?.[mes] ?? c.valor
+
+/** Contas que existem no mês: as recorrentes e os lançamentos avulsos daquele mês. */
+export const contasDoMes = (e: Estado, mes: string) => e.contas.filter((c) => !c.mes || c.mes === mes)
+
+/** Parcela de uma compra que cai na fatura do mês, ou null se não cai nenhuma. */
+export function parcelaNoMes(c: Compra, mes: string) {
+  const d = difMeses(c.mes, mes)
+  return d >= 0 && d < c.parcelas ? { n: d + 1, valor: c.valor / c.parcelas } : null
+}
+
+/** Fatura do cartão no mês: gastos não detalhados + parcelas das compras lançadas. */
+export function faturaDoMes(e: Estado, cartao: Cartao, mes: string) {
+  const base = cartao.faturas[mes] ?? 0
+  const parcelas = e.compras
+    .filter((c) => c.cartaoId === cartao.id)
+    .flatMap((compra) => {
+      const p = parcelaNoMes(compra, mes)
+      return p ? [{ compra, ...p }] : []
+    })
+  return { base, parcelas, total: base + soma(parcelas) }
+}
+
+/** Limite ainda livre: desconta a fatura do mês e todas as parcelas que ainda vão cair. */
+export function limiteLivre(e: Estado, cartao: Cartao, mes: string) {
+  const comprometido = e.compras
+    .filter((c) => c.cartaoId === cartao.id)
+    .reduce((s, c) => {
+      const d = difMeses(c.mes, mes)
+      const restantes = d < 0 ? c.parcelas : Math.max(c.parcelas - d, 0)
+      return s + (restantes * c.valor) / c.parcelas
+    }, 0)
+  return cartao.limite - (cartao.faturas[mes] ?? 0) - comprometido
+}
+
+/** Dias que ainda restam para gastar no mês (0 para meses que já passaram). */
+export function diasParaGastar(mes: string) {
+  const atual = mesAtual()
+  const [a, m] = mes.split('-').map(Number)
+  const noMes = new Date(a, m, 0).getDate()
+  if (mes < atual) return 0
+  if (mes > atual) return noMes
+  return noMes - new Date().getDate() + 1
 }
 
 /** Quem está usando o app e os dados que são só dessa pessoa. */
@@ -28,11 +74,14 @@ export function visao(e: Estado) {
  * Todos os números do mês do ponto de vista do perfil ativo.
  * Contas pessoais e cartões do outro perfil nunca entram aqui: a divisão da casa
  * só depende das contas da casa, então fecha igual para os dois sem expor nada.
+ *
+ * `extra` é um gasto pessoal hipotético somado ao mês (usado pelo simulador).
  */
-export function resumo(e: Estado, mes: string) {
+export function resumo(e: Estado, mes: string, extra = 0) {
   const v = visao(e)
-  const casa = e.contas.filter((c) => c.tipo === 'casa')
-  const pess = e.contas.filter((c) => c.tipo === 'pessoal' && c.pagador === v.eu)
+  const contas = contasDoMes(e, mes).map((c) => ({ ...c, valor: valorNoMes(c, mes) }))
+  const casa = contas.filter((c) => c.tipo === 'casa')
+  const pess = contas.filter((c) => c.tipo === 'pessoal' && c.pagador === v.eu)
 
   const totalCasa = soma(casa)
   const metade = totalCasa / 2
@@ -41,10 +90,12 @@ export function resumo(e: Estado, mes: string) {
   /** > 0: o outro me devolve; < 0: eu devolvo */
   const acerto = pagoEu - metade
 
-  const faturas = e.cartoes.filter((c) => c.dono === v.eu).map((c) => ({ cartao: c, valor: c.faturas[mes] ?? 0 }))
+  const faturas = e.cartoes.filter((c) => c.dono === v.eu).map((c) => ({ cartao: c, valor: faturaDoMes(e, c, mes).total }))
   const totalFaturas = soma(faturas)
-  const pessoais = soma(pess) + totalFaturas
-  const sobra = v.salario - metade - pessoais - v.diaADia
+  const pessoais = soma(pess) + totalFaturas + extra
+  /** o que sobra do salário depois de todas as contas, antes da reserva do dia a dia */
+  const livre = v.salario - metade - pessoais
+  const sobra = livre - v.diaADia
 
   const pagos = e.pagos[mes] ?? []
   const itens: ItemAPagar[] = [
@@ -62,7 +113,7 @@ export function resumo(e: Estado, mes: string) {
   return {
     ...v,
     casa, totalCasa, metade, pagoEu, pagoPar, acerto,
-    faturas, totalFaturas, pessoais, sobra,
+    faturas, totalFaturas, pessoais, livre, sobra,
     itens, pendente: soma(itens.filter((i) => !i.pago)),
     moradia,
   }

@@ -167,6 +167,25 @@ h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 .plastico .rodape { display: flex; justify-content: space-between; gap: 8px; font-weight: 600; font-size: 13px; }
 .plastico .rodape small { display: block; color: rgba(255, 255, 255, 0.7); font-size: 9px; letter-spacing: 0.06em; }
 
+.gastar { margin-top: 14px; padding: 10px 14px; border-radius: 12px; background: var(--campo); font-size: 13px; }
+.gastar.negativo { background: color-mix(in srgb, var(--rosa) 12%, var(--cartao)); }
+.acerto { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.acerto small { display: flex; align-items: center; gap: 4px; margin-top: 4px; }
+.historico { margin-top: 12px; font-size: 13px; }
+.historico summary { cursor: pointer; color: var(--suave); font-weight: 500; }
+.lista li.clicavel { cursor: pointer; }
+.lista .nome small { display: flex; }
+
+.bloco-cartao { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 20px; padding: 20px 0; border-top: 1px solid var(--linha); align-items: start; }
+.bloco-cartao .detalhe h4:first-child, .bloco-cartao .barra-acoes { margin-top: 0; }
+.bloco-cartao .barra-acoes h4 { margin: 0; }
+.bloco-cartao .plastico { max-width: 360px; width: 100%; }
+.proximas { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 8px; margin-top: 8px; }
+.proximas div { background: var(--campo); border-radius: 10px; padding: 10px; border: 1.5px solid transparent; }
+.proximas div.ativo { border-color: var(--azul); background: color-mix(in srgb, var(--azul) 8%, var(--cartao)); }
+.proximas small { display: block; text-transform: capitalize; }
+.proximas strong { font-size: 13px; white-space: nowrap; }
+
 /* ---------- páginas internas ---------- */
 .pagina.estreita { max-width: 640px; }
 .barra-acoes { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 16px 0 4px; flex-wrap: wrap; }

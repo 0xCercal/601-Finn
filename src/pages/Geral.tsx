@@ -1,9 +1,11 @@
 import { ArrowDownRight, ArrowUpRight, Check as Ok } from 'lucide-react'
 import type { Pagina } from '../App'
-import { resumo } from '../calc'
-import { alternarPago, useEstado } from '../store'
-import { brl, Check, cor, pct, Valor } from '../ui'
+import { diasParaGastar, limiteLivre, resumo } from '../calc'
+import { alternarPago, marcarAcerto, useEstado } from '../store'
+import { brl, Check, cor, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
+
+const dataCurta = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
 
 export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const e = useEstado()
@@ -12,6 +14,12 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const pagas = r.itens.filter((i) => i.pago).length
   const pctMoradia = pct(r.moradia, r.salario)
   const pctEu = pct(r.pagoEu, r.totalCasa)
+  const dias = diasParaGastar(mes)
+  const nomeDe = (q: 'eu' | 'par') => (q === 'eu' ? e.nomeEu : e.nomePar)
+
+  const temAcerto = Math.abs(r.acerto) >= 0.01
+  const feito = e.acertos[mes]
+  const historico = Object.entries(e.acertos).sort(([a], [b]) => b.localeCompare(a))
 
   const fatias = [
     { rotulo: 'Sua metade da casa', v: r.metade, cor: 'var(--marinho)' },
@@ -32,6 +40,16 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
             <small>valor estimado após pagar todas as contas</small>
           </p>
         </div>
+        <p className={'gastar' + (r.livre < 0 ? ' negativo' : '')}>
+          {r.livre < 0 ? (
+            <>As contas passam do salário em <strong>{brl(-r.livre)}</strong>.</>
+          ) : (
+            <>
+              Livre depois das contas: <strong>{brl(r.livre)}</strong>
+              {dias > 0 && <> · dá <strong>{brl(r.livre / dias)} por dia</strong> nos {dias} dias que restam</>}
+            </>
+          )}
+        </p>
         <div className="barra">
           {fatias.map((f) => f.v > 0 && <i key={f.rotulo} style={{ width: (f.v / base) * 100 + '%', background: f.cor }} />)}
         </div>
@@ -91,10 +109,59 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
           ))}
           {r.casa.length === 0 && <li className="vazio">Nenhuma conta da casa ainda.</li>}
         </ul>
-        {Math.abs(r.acerto) >= 0.01 && (
-          <p className="acerto">
-            {r.acerto > 0 ? r.nomeOutro + ' te devolve' : 'Você devolve'} <strong>{brl(Math.abs(r.acerto))}</strong>{r.acerto < 0 && ' para ' + r.nomeOutro}
-          </p>
+
+        {(temAcerto || feito) && (
+          <div className="acerto">
+            <p>
+              {temAcerto ? (
+                <>
+                  {r.acerto > 0 ? r.nomeOutro + ' te devolve' : 'Você devolve'} <strong>{brl(Math.abs(r.acerto))}</strong>
+                  {r.acerto < 0 && ' para ' + r.nomeOutro}
+                </>
+              ) : (
+                'As contas estão divididas igualmente.'
+              )}
+              {feito && (
+                <small className="positivo">
+                  <Ok size={13} /> Acertado em {dataCurta(feito.em)}
+                  {temAcerto && Math.abs(feito.valor - Math.abs(r.acerto)) >= 0.01 && ` (${brl(feito.valor)}; o valor mudou depois)`}
+                </small>
+              )}
+            </p>
+            {feito ? (
+              <button className="botao leve" onClick={() => marcarAcerto(mes, null)}>Desfazer</button>
+            ) : (
+              <button
+                className="botao leve"
+                onClick={() =>
+                  marcarAcerto(mes, {
+                    valor: Math.round(Math.abs(r.acerto) * 100) / 100,
+                    de: r.acerto > 0 ? r.outro : r.eu,
+                    para: r.acerto > 0 ? r.eu : r.outro,
+                    em: new Date().toISOString().slice(0, 10),
+                  })
+                }
+              >
+                Marcar feito
+              </button>
+            )}
+          </div>
+        )}
+        {historico.length > 0 && (
+          <details className="historico">
+            <summary>Histórico de acertos</summary>
+            <ul className="lista simples">
+              {historico.map(([m, a]) => (
+                <li key={m}>
+                  <span className="nome">
+                    {nomeDoMes(m)} de {m.slice(0, 4)}
+                    <small>{nomeDe(a.de)} → {nomeDe(a.para)} · em {dataCurta(a.em)}</small>
+                  </span>
+                  <strong>{brl(a.valor)}</strong>
+                </li>
+              ))}
+            </ul>
+          </details>
         )}
       </section>
 
@@ -103,7 +170,9 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
         <p className="apoio">Suas faturas do mês</p>
         <Valor v={r.totalFaturas} className="grande" />
         <div className="carrossel">
-          {r.faturas.map((f) => <CartaoVisual key={f.cartao.id} cartao={f.cartao} fatura={f.valor} mes={mes} />)}
+          {r.faturas.map((f) => (
+            <CartaoVisual key={f.cartao.id} cartao={f.cartao} fatura={f.valor} livre={limiteLivre(e, f.cartao, mes)} mes={mes} />
+          ))}
         </div>
         <button className="botao leve" onClick={() => ir('cartoes')}>Ver cartões</button>
       </section>

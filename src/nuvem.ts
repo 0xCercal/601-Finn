@@ -1,6 +1,6 @@
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js'
 import { useSyncExternalStore } from 'react'
-import { definir, lerEstado, limparLocal, registrarAoMudar, type Cartao, type Conta, type Estado, type Quem } from './store'
+import { definir, lerEstado, limparLocal, registrarAoMudar, type Acerto, type Cartao, type Compra, type Conta, type Estado, type Meta, type Quem } from './store'
 
 /**
  * Sincronização entre computadores (opcional), sem login.
@@ -54,6 +54,8 @@ interface DocCasa {
   nomes?: { eu: string; par: string }
   contas?: Conta[]
   pagos?: Pagos
+  metas?: Meta[]
+  acertos?: Record<string, Acerto>
 }
 
 interface DocPessoa {
@@ -61,6 +63,8 @@ interface DocPessoa {
   diaADia?: number
   contas?: Conta[]
   cartoes?: Cartao[]
+  compras?: Compra[]
+  metas?: Meta[]
   pagos?: Pagos
 }
 
@@ -92,17 +96,26 @@ function separar(e: Estado): Docs {
   const pessoa = (q: Quem): DocPessoa => {
     const contas = e.contas.filter((x) => x.tipo === 'pessoal' && x.pagador === q)
     const cartoes = e.cartoes.filter((x) => x.dono === q)
+    const idsCartoes = new Set(cartoes.map((x) => x.id))
     const ids = new Set([...contas.map((x) => x.id), ...cartoes.map((x) => 'fatura:' + x.id)])
     return {
       salario: q === 'eu' ? e.salario : e.salarioPar,
       diaADia: q === 'eu' ? e.diaADia : e.diaADiaPar,
       contas,
       cartoes,
+      compras: e.compras.filter((x) => idsCartoes.has(x.cartaoId)),
+      metas: e.metas.filter((x) => x.dono === q),
       pagos: filtrarPagos(e.pagos, (id) => ids.has(id)),
     }
   }
   return {
-    casa: { nomes: { eu: e.nomeEu, par: e.nomePar }, contas: casa, pagos: filtrarPagos(e.pagos, (id) => idsCasa.has(id)) },
+    casa: {
+      nomes: { eu: e.nomeEu, par: e.nomePar },
+      contas: casa,
+      pagos: filtrarPagos(e.pagos, (id) => idsCasa.has(id)),
+      metas: e.metas.filter((x) => x.dono === 'casa'),
+      acertos: e.acertos,
+    },
     eu: pessoa('eu'),
     par: pessoa('par'),
   }
@@ -125,6 +138,9 @@ function juntar(d: Docs, base: Estado): Estado {
     diaADiaPar: d.par.diaADia ?? 0,
     contas: [...(d.casa.contas ?? []), ...(d.eu.contas ?? []), ...(d.par.contas ?? [])],
     cartoes: [...(d.eu.cartoes ?? []), ...(d.par.cartoes ?? [])],
+    compras: [...(d.eu.compras ?? []), ...(d.par.compras ?? [])],
+    metas: [...(d.casa.metas ?? []), ...(d.eu.metas ?? []), ...(d.par.metas ?? [])],
+    acertos: d.casa.acertos ?? {},
     pagos,
   }
 }

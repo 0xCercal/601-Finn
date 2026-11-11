@@ -95,7 +95,7 @@ export default function App() {
       </nav>
       <button className="fab" onClick={() => setConta('nova')} aria-label="Adicionar conta"><Plus size={24} /></button>
 
-      {conta && <ContaForm conta={conta === 'nova' ? null : conta} onFechar={() => setConta(null)} />}
+      {conta && <ContaForm conta={conta === 'nova' ? null : conta} mes={mes} onFechar={() => setConta(null)} />}
     </div>
   )
 }
