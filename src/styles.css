@@ -241,6 +241,21 @@ h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 .lista.importar li.desmarcado .nome, .lista.importar li.desmarcado strong { color: var(--suave); }
 .lista.importar .nome { white-space: normal; }
 
+/* ---------- faixa de dias (contas a pagar) ---------- */
+.a-pagar h3 small { font-size: 12px; }
+.dias { display: flex; gap: 8px; overflow-x: auto; margin: 14px 0 4px; padding: 2px 2px 4px; scrollbar-width: thin; }
+.dia { flex: 0 0 auto; min-width: 54px; padding: 9px 10px 7px; border: 1px solid var(--linha); border-radius: 12px; background: var(--cartao); display: flex; flex-direction: column; align-items: center; gap: 5px; font-weight: 700; font-size: 15px; }
+.dia:hover { background: var(--campo); }
+.dia .pontos { display: flex; gap: 3px; height: 4px; }
+.dia .pontos i { width: 4px; height: 4px; border-radius: 50%; background: var(--cinza); }
+.dia .pontos i.pendente { background: var(--azul); }
+.dia.quitado { color: var(--suave); }
+.dia.atrasado { border-color: var(--rosa); color: var(--rosa); }
+.dia.atrasado .pontos i.pendente { background: var(--rosa); }
+.dia.ativo { background: var(--azul); border-color: var(--azul); color: #fff; box-shadow: 0 4px 12px color-mix(in srgb, var(--azul) 35%, transparent); }
+.dia.ativo .pontos i { background: rgba(255, 255, 255, 0.45); }
+.dia.ativo .pontos i.pendente { background: #fff; }
+
 /* ---------- páginas internas ---------- */
 .pagina.estreita { max-width: 640px; }
 .barra-acoes { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 16px 0 4px; flex-wrap: wrap; }

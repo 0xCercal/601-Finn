@@ -1,17 +1,91 @@
 import { ArrowDownRight, ArrowUpRight, Check as Ok } from 'lucide-react'
 import type { Pagina } from '../App'
-import { diasParaGastar, limiteLivre, pagadorDe, resumo } from '../calc'
+import { useEffect, useState } from 'react'
+import { diasParaGastar, limiteLivre, pagadorDe, resumo, type ItemAPagar } from '../calc'
 import { alternarPago, marcarAcerto, useEstado } from '../store'
 import { brl, Check, cor, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
 
 const dataCurta = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
 
+/** "hoje", "amanhã", "em 5 dias", "venceu há 2 dias" para o dia `dia` do mês `mes`. */
+function quando(mes: string, dia: number) {
+  const [a, m] = mes.split('-').map(Number)
+  const venc = new Date(a, m - 1, Math.min(dia, new Date(a, m, 0).getDate()))
+  const hoje = new Date()
+  hoje.setHours(0, 0, 0, 0)
+  const d = Math.round((venc.getTime() - hoje.getTime()) / 86400000)
+  if (d === 0) return 'vence hoje'
+  if (d === 1) return 'vence amanhã'
+  if (d > 1) return `em ${d} dias`
+  return d === -1 ? 'venceu ontem' : `venceu há ${-d} dias`
+}
+
+/** Contas a pagar com a faixa de dias de vencimento: tocar num dia filtra a lista. */
+function ContasAPagar({ mes, itens }: { mes: string; itens: ItemAPagar[] }) {
+  const [escolhido, setEscolhido] = useState<number | null>(null)
+  useEffect(() => setEscolhido(null), [mes])
+
+  const dias = [...new Set(itens.map((i) => i.dia))].sort((a, b) => a - b)
+  const dia = escolhido !== null && dias.includes(escolhido) ? escolhido : null
+  const lista = dia === null ? itens : itens.filter((i) => i.dia === dia)
+  const pagas = lista.filter((i) => i.pago).length
+  const pendente = lista.filter((i) => !i.pago).reduce((s, i) => s + i.valor, 0)
+  const dd = (n: number) => String(n).padStart(2, '0')
+
+  return (
+    <section className="cartao a-pagar">
+      <h3>
+        Contas a pagar {dia !== null && <small>· dia {dd(dia)}</small>}
+      </h3>
+      <Valor v={pendente} className="grande" />
+      <p className="apoio">
+        {dia !== null && quando(mes, dia) + ' · '}
+        {pagas} de {lista.length} pagas
+      </p>
+
+      {dias.length > 0 && (
+        <div className="dias" role="group" aria-label="Filtrar por dia de vencimento">
+          {dias.map((d) => {
+            const doDia = itens.filter((i) => i.dia === d)
+            const pendentes = doDia.filter((i) => !i.pago).length
+            const atrasado = pendentes > 0 && quando(mes, d).startsWith('venceu')
+            return (
+              <button
+                key={d}
+                className={'dia' + (d === dia ? ' ativo' : '') + (atrasado ? ' atrasado' : '') + (pendentes === 0 ? ' quitado' : '')}
+                aria-pressed={d === dia}
+                aria-label={`Dia ${dd(d)}: ${doDia.length} ${doDia.length === 1 ? 'conta' : 'contas'}, ${pendentes} a pagar`}
+                onClick={() => setEscolhido(d === dia ? null : d)}
+              >
+                {dd(d)}
+                <span className="pontos">
+                  {doDia.slice(0, 5).map((i) => <i key={i.id} className={i.pago ? '' : 'pendente'} />)}
+                </span>
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      <ul className="lista">
+        {lista.map((i) => (
+          <li key={i.id} className={i.pago ? 'pago' : ''} onClick={() => alternarPago(mes, i.id)}>
+            <Check marcado={i.pago} onClick={() => alternarPago(mes, i.id)} rotulo={'Marcar ' + i.nome + ' como paga'} />
+            <span className="nome">{i.nome}<small>dia {dd(i.dia)}{i.estimado && ' · estimado'}</small></span>
+            <strong>{i.estimado && '≈ '}{brl(i.valor)}</strong>
+          </li>
+        ))}
+        {itens.length === 0 && <li className="vazio">Nada a pagar neste mês.</li>}
+      </ul>
+    </section>
+  )
+}
+
 export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const e = useEstado()
   const r = resumo(e, mes)
   const base = Math.max(r.salario, r.parteCasa + r.pessoais + r.diaADia, 1)
-  const pagas = r.itens.filter((i) => i.pago).length
   const pctMoradia = pct(r.moradia, r.salario)
   const pctEu = pct(r.pagoEu, r.totalCasa)
   const dias = diasParaGastar(mes)
@@ -69,21 +143,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
         </div>
       </section>
 
-      <section className="cartao a-pagar">
-        <h3>Contas a pagar</h3>
-        <Valor v={r.pendente} className="grande" />
-        <p className="apoio">{pagas} de {r.itens.length} pagas</p>
-        <ul className="lista">
-          {r.itens.map((i) => (
-            <li key={i.id} className={i.pago ? 'pago' : ''} onClick={() => alternarPago(mes, i.id)}>
-              <Check marcado={i.pago} onClick={() => alternarPago(mes, i.id)} rotulo={'Marcar ' + i.nome + ' como paga'} />
-              <span className="nome">{i.nome}<small>dia {String(i.dia).padStart(2, '0')}{i.estimado && ' · estimado'}</small></span>
-              <strong>{i.estimado && '≈ '}{brl(i.valor)}</strong>
-            </li>
-          ))}
-          {r.itens.length === 0 && <li className="vazio">Nada a pagar neste mês.</li>}
-        </ul>
-      </section>
+      <ContasAPagar mes={mes} itens={r.itens} />
 
       <section className="cartao a-divisao">
         <h3>Divisão da casa</h3>
