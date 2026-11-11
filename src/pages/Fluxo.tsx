@@ -28,7 +28,7 @@ export function Fluxo({ mes }: { mes: string }) {
     const r = resumo(e, m)
     const d = simulando ? difMeses(inicio, m) : -1
     const extra = d >= 0 && d < n ? total / n : 0
-    return { m, metade: r.metade, pessoais: r.pessoais, sobra: r.sobra, extra, comCompra: r.sobra - extra }
+    return { m, metade: r.parteCasa, pessoais: r.pessoais, sobra: r.sobra, extra, comCompra: r.sobra - extra }
   })
 
   // escala única para as barras e para o marcador "sem a compra"
@@ -120,7 +120,7 @@ export function Fluxo({ mes }: { mes: string }) {
           <thead>
             <tr>
               <th>Mês</th>
-              <th>Sua metade da casa</th>
+              <th>Sua parte da casa</th>
               <th>Contas pessoais</th>
               {simulando && <th>Compra simulada</th>}
               <th>Sobra</th>

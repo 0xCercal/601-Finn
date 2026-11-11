@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import {
   excluirCartao, excluirCompra, excluirConta, excluirMeta, novoId, salvarCartao, salvarCompra, salvarConta, salvarMeta, useEstado,
-  type Cartao, type Compra, type Conta, type Meta,
+  type Cartao, type Compra, type Conta, type Meta, type Quem,
 } from './store'
-import { Campo, lerValor, Modal, nomeDoMes, paraCampo } from './ui'
+import { valorNoMes } from './calc'
+import { brl, Campo, lerValor, Modal, nomeDoMes, paraCampo } from './ui'
 
 const diaValido = (txt: string) => Math.min(31, Math.max(1, parseInt(txt) || 1))
 
@@ -14,10 +15,13 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
   const [noMes, setNoMes] = useState(paraCampo(conta?.ajustes?.[mes] ?? 0))
   const [dia, setDia] = useState(String(conta?.dia ?? 5))
   const [avulsa, setAvulsa] = useState(Boolean(conta?.mes))
+  const [variavel, setVariavel] = useState(conta?.variavel ?? false)
   const [tipo, setTipo] = useState<Conta['tipo']>(conta?.tipo ?? 'casa')
+  const [divisao, setDivisao] = useState<'meio' | Quem>(conta?.divisao ?? 'meio')
   const [pagador, setPagador] = useState<Conta['pagador']>(conta?.pagador ?? 'eu')
   const [moradia, setMoradia] = useState(conta?.moradia ?? false)
   const esteMes = nomeDoMes(mes)
+  const nomeDe = (q: Quem) => (q === 'eu' ? e.nomeEu : e.nomePar)
 
   function enviar(ev: FormEvent) {
     ev.preventDefault()
@@ -25,16 +29,21 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
     const ajustes = { ...conta?.ajustes }
     if (noMes.trim()) ajustes[mes] = lerValor(noMes)
     else delete ajustes[mes]
+    const daCasa = tipo === 'casa'
     salvarConta({
       id: conta?.id ?? novoId(),
       nome: nome.trim(),
       valor: lerValor(valor),
       dia: diaValido(dia),
       tipo,
-      pagador: tipo === 'casa' ? pagador : conta?.tipo === 'pessoal' ? conta.pagador : e.perfil,
+      // conta só de uma pessoa: essa pessoa paga; conta pessoal: continua de quem é
+      pagador: daCasa ? (divisao === 'meio' ? pagador : divisao) : conta?.tipo === 'pessoal' ? conta.pagador : e.perfil,
       moradia,
-      // lançamento avulso guarda o mês em que existe; conta recorrente guarda os ajustes por mês
-      ...(avulsa ? { mes: conta?.mes ?? mes } : Object.keys(ajustes).length ? { ajustes } : {}),
+      ...(daCasa && divisao !== 'meio' ? { divisao } : {}),
+      // lançamento avulso guarda o mês em que existe; conta recorrente guarda os valores por mês
+      ...(avulsa
+        ? { mes: conta?.mes ?? mes }
+        : { ...(variavel ? { variavel: true } : {}), ...(Object.keys(ajustes).length ? { ajustes } : {}) }),
     })
     onFechar()
   }
@@ -51,32 +60,57 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
             <button type="button" className={avulsa ? 'ativo' : ''} onClick={() => setAvulsa(true)}>Só em {nomeDoMes(conta?.mes ?? mes)}</button>
           </div>
         </Campo>
+        {!avulsa && (
+          <label className="marcar">
+            <input type="checkbox" checked={variavel} onChange={(ev) => setVariavel(ev.target.checked)} /> O valor muda todo mês (luz, gás, condomínio)
+          </label>
+        )}
         <div className="duas">
-          <Campo rotulo={avulsa ? 'Valor (R$)' : 'Valor de todo mês (R$)'}>
+          <Campo rotulo={avulsa ? 'Valor (R$)' : variavel ? 'Valor estimado (R$)' : 'Valor de todo mês (R$)'}>
             <input value={valor} onChange={(ev) => setValor(ev.target.value)} inputMode="decimal" placeholder="0,00" />
           </Campo>
           <Campo rotulo="Dia do vencimento">
             <input value={dia} onChange={(ev) => setDia(ev.target.value)} inputMode="numeric" />
           </Campo>
         </div>
-        {conta && !avulsa && (
-          <Campo rotulo={`Valor diferente só em ${esteMes} (opcional)`}>
-            <input value={noMes} onChange={(ev) => setNoMes(ev.target.value)} inputMode="decimal" placeholder="igual ao de todo mês" />
+        {!avulsa && (variavel || conta) && (
+          <Campo rotulo={variavel ? `Valor real de ${esteMes} (quando a conta chegar)` : `Valor diferente só em ${esteMes} (opcional)`}>
+            <input
+              value={noMes}
+              onChange={(ev) => setNoMes(ev.target.value)}
+              inputMode="decimal"
+              placeholder={variavel ? 'por enquanto usa a estimativa' : 'igual ao de todo mês'}
+            />
           </Campo>
+        )}
+        {!avulsa && variavel && (
+          <p className="apoio espaco">Nos meses sem valor informado, o app usa a média dos últimos 3 meses informados (ou a estimativa, no começo).</p>
         )}
         <Campo rotulo="Tipo">
           <div className="abas">
-            <button type="button" className={tipo === 'casa' ? 'ativo' : ''} onClick={() => setTipo('casa')}>Da casa (meio a meio)</button>
+            <button type="button" className={tipo === 'casa' ? 'ativo' : ''} onClick={() => setTipo('casa')}>Da casa (os dois veem)</button>
             <button type="button" className={tipo === 'pessoal' ? 'ativo' : ''} onClick={() => setTipo('pessoal')}>Pessoal (só você vê)</button>
           </div>
         </Campo>
         {tipo === 'casa' && (
-          <Campo rotulo="Quem paga">
+          <Campo rotulo="Quem arca com a conta">
+            <div className="abas">
+              <button type="button" className={divisao === 'meio' ? 'ativo' : ''} onClick={() => setDivisao('meio')}>Meio a meio</button>
+              <button type="button" className={divisao === 'eu' ? 'ativo' : ''} onClick={() => setDivisao('eu')}>Só {e.nomeEu}</button>
+              <button type="button" className={divisao === 'par' ? 'ativo' : ''} onClick={() => setDivisao('par')}>Só {e.nomePar}</button>
+            </div>
+          </Campo>
+        )}
+        {tipo === 'casa' && divisao === 'meio' && (
+          <Campo rotulo="Quem paga o boleto">
             <div className="abas">
               <button type="button" className={pagador === 'eu' ? 'ativo' : ''} onClick={() => setPagador('eu')}>{e.nomeEu}</button>
               <button type="button" className={pagador === 'par' ? 'ativo' : ''} onClick={() => setPagador('par')}>{e.nomePar}</button>
             </div>
           </Campo>
+        )}
+        {tipo === 'casa' && divisao !== 'meio' && (
+          <p className="apoio espaco">Entra inteira nas contas de {nomeDe(divisao)}, sem acerto. Os dois continuam vendo a conta.</p>
         )}
         <label className="marcar">
           <input type="checkbox" checked={moradia} onChange={(ev) => setMoradia(ev.target.checked)} /> Conta de moradia (aluguel, condomínio, luz…)
@@ -87,6 +121,34 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
               {conta.mes ? 'Excluir' : 'Excluir de todos os meses'}
             </button>
           )}
+          <button type="submit" className="botao primario">Salvar</button>
+        </footer>
+      </form>
+    </Modal>
+  )
+}
+
+/** Informa o valor real de uma conta variável num mês. */
+export function ValorMesForm({ conta, mes, onFechar }: { conta: Conta; mes: string; onFechar: () => void }) {
+  const [valor, setValor] = useState(paraCampo(conta.ajustes?.[mes] ?? 0))
+  // estimativa = o que o app usaria se este mês não tivesse valor informado
+  const semEsteMes = { ...conta, ajustes: Object.fromEntries(Object.entries(conta.ajustes ?? {}).filter(([m]) => m !== mes)) }
+
+  function enviar(ev: FormEvent) {
+    ev.preventDefault()
+    if (!valor.trim()) return
+    salvarConta({ ...conta, ajustes: { ...conta.ajustes, [mes]: lerValor(valor) } })
+    onFechar()
+  }
+
+  return (
+    <Modal titulo={`${conta.nome} · ${nomeDoMes(mes)}`} onFechar={onFechar}>
+      <form onSubmit={enviar}>
+        <Campo rotulo={`Valor da conta de ${nomeDoMes(mes)} (R$)`}>
+          <input value={valor} onChange={(ev) => setValor(ev.target.value)} inputMode="decimal" placeholder="0,00" autoFocus />
+        </Campo>
+        <p className="apoio espaco">Estimativa para este mês: {brl(valorNoMes(semEsteMes, mes))}</p>
+        <footer>
           <button type="submit" className="botao primario">Salvar</button>
         </footer>
       </form>

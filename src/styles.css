@@ -233,6 +233,14 @@ h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 .meta .barra { margin: 4px 0; }
 .meta .apoio { margin: 0 0 6px; flex: 1; }
 
+.link.pequeno { font-size: 12px; display: block; margin-left: auto; margin-top: 2px; }
+.botoes { display: flex; gap: 8px; flex-wrap: wrap; }
+.lista.importar { max-height: 340px; overflow-y: auto; margin: 0 0 12px; }
+.lista.importar li { gap: 10px; }
+.lista.importar li input { flex: none; width: 16px; height: 16px; }
+.lista.importar li.desmarcado .nome, .lista.importar li.desmarcado strong { color: var(--suave); }
+.lista.importar .nome { white-space: normal; }
+
 /* ---------- páginas internas ---------- */
 .pagina.estreita { max-width: 640px; }
 .barra-acoes { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 16px 0 4px; flex-wrap: wrap; }

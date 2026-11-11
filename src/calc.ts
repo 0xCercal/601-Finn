@@ -8,10 +8,37 @@ export interface ItemAPagar {
   valor: number
   dia: number
   pago: boolean
+  /** valor ainda é estimativa (conta variável sem o valor do mês) */
+  estimado: boolean
 }
 
-/** Valor da conta num mês: o ajuste daquele mês, se houver, ou o valor padrão. */
-export const valorNoMes = (c: Conta, mes: string) => c.ajustes?.[mes] ?? c.valor
+/**
+ * Valor da conta num mês: o informado para aquele mês, se houver. Senão, para conta
+ * variável, a média dos últimos 3 meses informados; para as demais, o valor padrão.
+ */
+export function valorNoMes(c: Conta, mes: string) {
+  const real = c.ajustes?.[mes]
+  if (real !== undefined) return real
+  if (!c.variavel) return c.valor
+  const anteriores = Object.entries(c.ajustes ?? {})
+    .filter(([m]) => m < mes)
+    .sort(([a], [b]) => b.localeCompare(a))
+    .slice(0, 3)
+    .map(([, v]) => v)
+  return anteriores.length ? anteriores.reduce((s, v) => s + v, 0) / anteriores.length : c.valor
+}
+
+/** Conta variável cujo valor do mês ainda não foi informado. */
+export const estimadoNoMes = (c: Conta, mes: string) => Boolean(c.variavel) && !c.mes && c.ajustes?.[mes] === undefined
+
+/** Quem paga a conta da casa: se ela é só de uma pessoa, essa pessoa; senão, quem foi escolhido. */
+export const pagadorDe = (c: Conta) => (c.divisao && c.divisao !== 'meio' ? c.divisao : c.pagador)
+
+/** Quanto de uma conta da casa cabe a uma pessoa (usa `c.valor`, que pode já ser o valor do mês). */
+export function parteDe(c: Conta, q: Quem) {
+  const d = c.divisao ?? 'meio'
+  return d === 'meio' ? c.valor / 2 : d === q ? c.valor : 0
+}
 
 /** Contas que existem no mês: as recorrentes e os lançamentos avulsos daquele mês. */
 export const contasDoMes = (e: Estado, mes: string) => e.contas.filter((c) => !c.mes || c.mes === mes)
@@ -79,40 +106,42 @@ export function visao(e: Estado) {
  */
 export function resumo(e: Estado, mes: string, extra = 0) {
   const v = visao(e)
-  const contas = contasDoMes(e, mes).map((c) => ({ ...c, valor: valorNoMes(c, mes) }))
+  const contas = contasDoMes(e, mes).map((c) => ({ ...c, valor: valorNoMes(c, mes), estimado: estimadoNoMes(c, mes) }))
   const casa = contas.filter((c) => c.tipo === 'casa')
   const pess = contas.filter((c) => c.tipo === 'pessoal' && c.pagador === v.eu)
 
   const totalCasa = soma(casa)
-  const metade = totalCasa / 2
-  const pagoEu = soma(casa.filter((c) => c.pagador === v.eu))
+  /** quanto das contas da casa cabe a mim (metade das divididas + as que são só minhas) */
+  const parteCasa = casa.reduce((s, c) => s + parteDe(c, v.eu), 0)
+  const pagoEu = soma(casa.filter((c) => pagadorDe(c) === v.eu))
   const pagoPar = totalCasa - pagoEu
   /** > 0: o outro me devolve; < 0: eu devolvo */
-  const acerto = pagoEu - metade
+  const acerto = pagoEu - parteCasa
 
   const faturas = e.cartoes.filter((c) => c.dono === v.eu).map((c) => ({ cartao: c, valor: faturaDoMes(e, c, mes).total }))
   const totalFaturas = soma(faturas)
   const pessoais = soma(pess) + totalFaturas + extra
   /** o que sobra do salário depois de todas as contas, antes da reserva do dia a dia */
-  const livre = v.salario - metade - pessoais
+  const livre = v.salario - parteCasa - pessoais
   const sobra = livre - v.diaADia
 
   const pagos = e.pagos[mes] ?? []
   const itens: ItemAPagar[] = [
-    ...casa.filter((c) => c.pagador === v.eu),
-    ...pess,
+    ...[...casa.filter((c) => pagadorDe(c) === v.eu), ...pess].map((c) => ({
+      id: c.id, nome: c.nome, valor: c.valor, dia: c.dia, estimado: c.estimado,
+    })),
     ...faturas
       .filter((f) => f.valor > 0)
-      .map((f) => ({ id: 'fatura:' + f.cartao.id, nome: 'Fatura ' + f.cartao.nome, valor: f.valor, dia: f.cartao.diaVence })),
+      .map((f) => ({ id: 'fatura:' + f.cartao.id, nome: 'Fatura ' + f.cartao.nome, valor: f.valor, dia: f.cartao.diaVence, estimado: false })),
   ]
-    .map((c) => ({ id: c.id, nome: c.nome, valor: c.valor, dia: c.dia, pago: pagos.includes(c.id) }))
+    .map((c) => ({ ...c, pago: pagos.includes(c.id) }))
     .sort((a, b) => a.dia - b.dia)
 
-  const moradia = soma(casa.filter((c) => c.moradia)) / 2 + soma(pess.filter((c) => c.moradia))
+  const moradia = casa.filter((c) => c.moradia).reduce((s, c) => s + parteDe(c, v.eu), 0) + soma(pess.filter((c) => c.moradia))
 
   return {
     ...v,
-    casa, totalCasa, metade, pagoEu, pagoPar, acerto,
+    casa, totalCasa, parteCasa, pagoEu, pagoPar, acerto,
     faturas, totalFaturas, pessoais, livre, sobra,
     itens, pendente: soma(itens.filter((i) => !i.pago)),
     moradia,

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { faturaDoMes, limiteLivre } from '../calc'
 import { CartaoForm, CompraForm } from '../forms'
+import { ImportarFatura } from '../Importar'
 import { somaMes, useEstado, type Cartao, type Compra } from '../store'
 import { brl, nomeDoMes, Valor } from '../ui'
 
@@ -22,6 +23,7 @@ export function Cartoes({ mes }: { mes: string }) {
   const e = useEstado()
   const [cartao, setCartao] = useState<Cartao | 'novo' | null>(null)
   const [compra, setCompra] = useState<{ cartaoId: string; compra: Compra | null } | null>(null)
+  const [importando, setImportando] = useState<Cartao | null>(null)
   const meus = e.cartoes.filter((c) => c.dono === e.perfil)
   const total = meus.reduce((s, c) => s + faturaDoMes(e, c, mes).total, 0)
 
@@ -43,14 +45,20 @@ export function Cartoes({ mes }: { mes: string }) {
             <div className="detalhe">
               <div className="barra-acoes">
                 <h4>Fatura de {nomeDoMes(mes)}</h4>
-                <button className="botao leve" onClick={() => setCompra({ cartaoId: c.id, compra: null })}>Nova compra</button>
+                <div className="botoes">
+                  <button className="botao leve" onClick={() => setImportando(c)}>Importar fatura</button>
+                  <button className="botao leve" onClick={() => setCompra({ cartaoId: c.id, compra: null })}>Nova compra</button>
+                </div>
               </div>
               <ul className="lista simples">
                 {f.parcelas.map((p) => (
                   <li key={p.compra.id} className="clicavel" onClick={() => setCompra({ cartaoId: c.id, compra: p.compra })}>
                     <span className="nome">
                       {p.compra.descricao}
-                      <small>{p.compra.parcelas > 1 ? `parcela ${p.n} de ${p.compra.parcelas}` : 'à vista'}</small>
+                      <small>
+                        {p.compra.parcelas > 1 ? `parcela ${p.n} de ${p.compra.parcelas}` : p.valor < 0 ? 'crédito' : 'à vista'}
+                        {p.compra.origem && ' · importada'}
+                      </small>
                     </span>
                     <strong>{brl(p.valor)}</strong>
                   </li>
@@ -82,6 +90,7 @@ export function Cartoes({ mes }: { mes: string }) {
       {meus.length === 0 && <p className="vazio">Nenhum cartão cadastrado.</p>}
 
       {cartao && <CartaoForm cartao={cartao === 'novo' ? null : cartao} mes={mes} onFechar={() => setCartao(null)} />}
+      {importando && <ImportarFatura cartao={importando} mes={mes} onFechar={() => setImportando(null)} />}
       {compra && <CompraForm compra={compra.compra} cartaoId={compra.cartaoId} mes={mes} onFechar={() => setCompra(null)} />}
     </section>
   )

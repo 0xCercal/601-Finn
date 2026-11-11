@@ -17,8 +17,12 @@ export interface Conta {
   moradia: boolean
   /** lançamento avulso: só existe neste mês ('AAAA-MM'). Sem isso, repete todo mês. */
   mes?: string
-  /** valor diferente do padrão em meses específicos ('AAAA-MM') */
+  /** valor diferente do padrão em meses específicos ('AAAA-MM'); numa conta variável, o valor real do mês */
   ajustes?: Record<string, number>
+  /** conta da casa: 'meio' divide igual; 'eu'/'par' fica inteira com essa pessoa. Sem isso, meio a meio. */
+  divisao?: 'meio' | Quem
+  /** o valor muda todo mês (luz, gás): o padrão é só estimativa até informar o valor do mês */
+  variavel?: boolean
 }
 
 export interface Cartao {
@@ -43,6 +47,8 @@ export interface Compra {
   parcelas: number
   /** mês da fatura em que cai a primeira parcela ('AAAA-MM') */
   mes: string
+  /** chave do lançamento importado de uma fatura, para não importar duas vezes */
+  origem?: string
 }
 
 /** Objetivo de poupança, da casa ou de uma pessoa. */
@@ -237,6 +243,17 @@ export const excluirCartao = (id: string) =>
   }))
 
 export const salvarCompra = (c: Compra) => alterar((e) => ({ ...e, compras: gravar(e.compras, c) }))
+/** Adiciona compras importadas de uma fatura; opcionalmente zera os "outros gastos" daquele mês. */
+export function importarCompras(cartaoId: string, novas: Compra[], zerarOutrosEm?: string) {
+  alterar((e) => ({
+    ...e,
+    compras: [...e.compras, ...novas],
+    cartoes: zerarOutrosEm
+      ? e.cartoes.map((c) => (c.id === cartaoId ? { ...c, faturas: { ...c.faturas, [zerarOutrosEm]: 0 } } : c))
+      : e.cartoes,
+  }))
+}
+
 export const excluirCompra = (id: string) => alterar((e) => ({ ...e, compras: e.compras.filter((c) => c.id !== id) }))
 
 export const salvarMeta = (m: Meta) => alterar((e) => ({ ...e, metas: gravar(e.metas, m) }))

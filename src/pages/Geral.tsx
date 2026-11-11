@@ -1,6 +1,6 @@
 import { ArrowDownRight, ArrowUpRight, Check as Ok } from 'lucide-react'
 import type { Pagina } from '../App'
-import { diasParaGastar, limiteLivre, resumo } from '../calc'
+import { diasParaGastar, limiteLivre, pagadorDe, resumo } from '../calc'
 import { alternarPago, marcarAcerto, useEstado } from '../store'
 import { brl, Check, cor, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
@@ -10,7 +10,7 @@ const dataCurta = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
 export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const e = useEstado()
   const r = resumo(e, mes)
-  const base = Math.max(r.salario, r.metade + r.pessoais + r.diaADia, 1)
+  const base = Math.max(r.salario, r.parteCasa + r.pessoais + r.diaADia, 1)
   const pagas = r.itens.filter((i) => i.pago).length
   const pctMoradia = pct(r.moradia, r.salario)
   const pctEu = pct(r.pagoEu, r.totalCasa)
@@ -22,7 +22,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const historico = Object.entries(e.acertos).sort(([a], [b]) => b.localeCompare(a))
 
   const fatias = [
-    { rotulo: 'Sua metade da casa', v: r.metade, cor: 'var(--marinho)' },
+    { rotulo: 'Sua parte da casa', v: r.parteCasa, cor: 'var(--marinho)' },
     { rotulo: 'Contas pessoais', v: r.pessoais, cor: 'var(--azul)' },
     { rotulo: 'Dia a dia', v: r.diaADia, cor: 'var(--cinza)' },
     { rotulo: 'Sobra', v: Math.max(r.sobra, 0), cor: 'var(--verde)' },
@@ -77,8 +77,8 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
           {r.itens.map((i) => (
             <li key={i.id} className={i.pago ? 'pago' : ''} onClick={() => alternarPago(mes, i.id)}>
               <Check marcado={i.pago} onClick={() => alternarPago(mes, i.id)} rotulo={'Marcar ' + i.nome + ' como paga'} />
-              <span className="nome">{i.nome}<small>dia {String(i.dia).padStart(2, '0')}</small></span>
-              <strong>{brl(i.valor)}</strong>
+              <span className="nome">{i.nome}<small>dia {String(i.dia).padStart(2, '0')}{i.estimado && ' · estimado'}</small></span>
+              <strong>{i.estimado && '≈ '}{brl(i.valor)}</strong>
             </li>
           ))}
           {r.itens.length === 0 && <li className="vazio">Nada a pagar neste mês.</li>}
@@ -96,15 +96,16 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
         <div className="barra dupla">
           <i style={{ width: pctEu + '%', background: `var(--${cor(r.eu)})` }}>{r.totalCasa > 0 && pctEu + '%'}</i>
           <i style={{ width: 100 - pctEu + '%', background: `var(--${cor(r.outro)})` }}>{r.totalCasa > 0 && 100 - pctEu + '%'}</i>
-          <b />
+          <b style={{ left: pct(r.parteCasa, r.totalCasa) + '%' }} />
         </div>
+        <p className="apoio">Sua parte: <strong>{brl(r.parteCasa)}</strong> (o traço na barra)</p>
         <h4>Quem paga cada conta</h4>
         <ul className="lista simples">
           {r.casa.map((c) => (
             <li key={c.id}>
-              <i className={'ponto ' + cor(c.pagador)} />
-              <span className="nome">{c.nome}</span>
-              <strong>{brl(c.valor)}</strong>
+              <i className={'ponto ' + cor(pagadorDe(c))} />
+              <span className="nome">{c.nome}{c.divisao && c.divisao !== 'meio' && <small>só {nomeDe(c.divisao)}</small>}</span>
+              <strong>{c.estimado && '≈ '}{brl(c.valor)}</strong>
             </li>
           ))}
           {r.casa.length === 0 && <li className="vazio">Nenhuma conta da casa ainda.</li>}
