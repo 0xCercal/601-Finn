@@ -241,6 +241,11 @@ h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 .lista.importar li.desmarcado .nome, .lista.importar li.desmarcado strong { color: var(--suave); }
 .lista.importar .nome { white-space: normal; }
 
+/* ---------- ilustrações 3D nos cartões ---------- */
+.ilustracao { float: right; width: 88px; height: 88px; margin: -8px -6px 4px 12px; object-fit: contain; user-select: none; pointer-events: none; filter: drop-shadow(0 6px 10px rgba(16, 24, 40, 0.12)); }
+.a-saldo .ilustracao { width: 104px; height: 104px; }
+.gastar { display: flow-root; }
+
 /* ---------- faixa de dias (contas a pagar) ---------- */
 .a-pagar h3 small { font-size: 12px; }
 .dias { display: flex; gap: 8px; overflow-x: auto; margin: 14px 0 4px; padding: 2px 2px 4px; scrollbar-width: thin; }
@@ -288,6 +293,7 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 @media (max-width: 760px) {
   .app { grid-template-columns: 1fr; padding: 12px 12px 96px; }
   .lateral, .so-desktop { display: none; }
+  .ilustracao, .a-saldo .ilustracao { width: 64px; height: 64px; margin: -6px -4px 4px 8px; }
   .grade { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'saldo' 'pagar' 'divisao' 'cartoes' 'moradia'; }
   .topo h1 { font-size: 20px; }
   .valor.enorme { font-size: 40px; }

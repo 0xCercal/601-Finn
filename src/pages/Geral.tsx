@@ -3,7 +3,7 @@ import type { Pagina } from '../App'
 import { useEffect, useState } from 'react'
 import { diasParaGastar, limiteLivre, pagadorDe, resumo, type ItemAPagar } from '../calc'
 import { alternarPago, marcarAcerto, useEstado } from '../store'
-import { brl, Check, cor, nomeDoMes, pct, Valor } from '../ui'
+import { brl, Check, cor, Ilustracao, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
 
 const dataCurta = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
@@ -35,6 +35,7 @@ function ContasAPagar({ mes, itens }: { mes: string; itens: ItemAPagar[] }) {
 
   return (
     <section className="cartao a-pagar">
+      <Ilustracao nome="calendario" />
       <h3>
         Contas a pagar {dia !== null && <small>· dia {dd(dia)}</small>}
       </h3>
@@ -105,6 +106,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   return (
     <div className="grade">
       <section className="cartao a-saldo">
+        <Ilustracao nome="saldo" />
         <h3>Saldo previsto</h3>
         <div className="saldo-linha">
           <Valor v={r.sobra} className={'enorme' + (r.sobra < 0 ? ' negativo' : '')} />
@@ -146,6 +148,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
       <ContasAPagar mes={mes} itens={r.itens} />
 
       <section className="cartao a-divisao">
+        <Ilustracao nome="divisao" />
         <h3>Divisão da casa</h3>
         <p className="apoio">Total das contas</p>
         <Valor v={r.totalCasa} className="grande" />
@@ -227,6 +230,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
       </section>
 
       <section className="cartao a-cartoes">
+        <Ilustracao nome="cartoes" />
         <h3>Cartões</h3>
         <p className="apoio">Suas faturas do mês</p>
         <Valor v={r.totalFaturas} className="grande" />
@@ -239,6 +243,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
       </section>
 
       <section className="cartao a-moradia">
+        <Ilustracao nome="calculadora" />
         <h3>Moradia</h3>
         <p className="apoio">Quanto você gasta pra morar</p>
         <Valor v={r.moradia} className="grande" />
