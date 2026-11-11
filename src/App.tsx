@@ -1,9 +1,11 @@
-import { ArrowLeftRight, Building2, ChevronLeft, ChevronRight, CreditCard, LayoutGrid, Moon, Plus, Settings, Sun } from 'lucide-react'
+import { ArrowLeftRight, Building2, ChevronLeft, ChevronRight, CreditCard, LayoutGrid, Moon, Plus, Settings, Sun, Target, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ContaForm } from './forms'
 import { Ajustes } from './pages/Ajustes'
 import { Cartoes } from './pages/Cartoes'
 import { Contas } from './pages/Contas'
+import { Fluxo } from './pages/Fluxo'
+import { Metas } from './pages/Metas'
 import { Geral } from './pages/Geral'
 import { visao } from './calc'
 import { Entrada } from './Entrada'
@@ -11,12 +13,14 @@ import { useNuvem } from './nuvem'
 import { alterar, mesAtual, somaMes, trocarPerfil, useEstado, type Conta } from './store'
 import { cor } from './ui'
 
-export type Pagina = 'geral' | 'contas' | 'cartoes' | 'ajustes'
+export type Pagina = 'geral' | 'fluxo' | 'contas' | 'cartoes' | 'metas' | 'ajustes'
 
 const MENU: { id: Pagina; rotulo: string; curto: string; Icone: typeof LayoutGrid }[] = [
   { id: 'geral', rotulo: 'Visão geral', curto: 'Início', Icone: LayoutGrid },
+  { id: 'fluxo', rotulo: 'Fluxo de caixa', curto: 'Fluxo', Icone: TrendingUp },
   { id: 'contas', rotulo: 'Contas', curto: 'Contas', Icone: Building2 },
   { id: 'cartoes', rotulo: 'Cartões', curto: 'Cartões', Icone: CreditCard },
+  { id: 'metas', rotulo: 'Objetivos', curto: 'Metas', Icone: Target },
   { id: 'ajustes', rotulo: 'Ajustes', curto: 'Ajustes', Icone: Settings },
 ]
 
@@ -83,6 +87,8 @@ export default function App() {
         {pagina === 'geral' && <Geral mes={mes} ir={setPagina} />}
         {pagina === 'contas' && <Contas mes={mes} onEditar={setConta} />}
         {pagina === 'cartoes' && <Cartoes mes={mes} />}
+        {pagina === 'fluxo' && <Fluxo mes={mes} />}
+        {pagina === 'metas' && <Metas />}
         {pagina === 'ajustes' && <Ajustes />}
       </main>
 
