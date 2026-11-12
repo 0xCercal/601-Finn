@@ -1,3 +1,4 @@
+import { CloudUpload, FileCheck2 } from 'lucide-react'
 import { useState } from 'react'
 import { mesDaFatura } from './calc'
 import { categoriaDe, NOMES_CATEGORIA } from './categorias'
@@ -22,6 +23,7 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
   /** escolhas manuais; o que não está aqui segue a sugestão (desmarcado quando há aviso) */
   const [escolha, setEscolha] = useState<Record<number, boolean>>({})
   const [zerar, setZerar] = useState(true)
+  const [sobre, setSobre] = useState(false)
 
   const existentes = e.compras.filter((c) => c.cartaoId === cartao.id)
   const cands = lancs && faturaMes ? paraCompras(lancs, faturaMes, existentes) : []
@@ -66,9 +68,25 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
 
   return (
     <Modal titulo={'Importar fatura · ' + cartao.nome} onFechar={onFechar}>
-      <Campo rotulo="Arquivo da fatura (CSV ou OFX)">
-        <input type="file" accept=".csv,.ofx,.txt,.pdf" onChange={(ev) => void abrir(ev.target.files?.[0])} />
-      </Campo>
+      <label
+        className={'soltar' + (sobre ? ' sobre' : '') + (lancs ? ' pronto' : '')}
+        onDragOver={(ev) => { ev.preventDefault(); setSobre(true) }}
+        onDragLeave={() => setSobre(false)}
+        onDrop={(ev) => { ev.preventDefault(); setSobre(false); void abrir(ev.dataTransfer.files?.[0]) }}
+      >
+        <input
+          type="file"
+          accept=".csv,.ofx,.txt,.pdf"
+          onChange={(ev) => { void abrir(ev.target.files?.[0]); ev.target.value = '' }}
+        />
+        <span className="soltar-icone">{lancs ? <FileCheck2 size={20} /> : <CloudUpload size={20} />}</span>
+        {lancs ? (
+          <span className="soltar-texto"><strong>{arquivo}</strong> · <u>trocar arquivo</u></span>
+        ) : (
+          <span className="soltar-texto">Arraste e solte a fatura aqui ou <u>selecionar</u></span>
+        )}
+        <small>CSV ou OFX exportado pelo banco</small>
+      </label>
       <Campo rotulo="Fatura de">
         <input type="month" value={faturaMes} onChange={(ev) => { setFaturaMes(ev.target.value); setSugerido(false) }} />
       </Campo>

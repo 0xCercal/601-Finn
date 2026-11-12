@@ -355,3 +355,15 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 .valor-grande { font-size: 24px !important; font-weight: 700; letter-spacing: -0.02em; }
 
 .link.mover { margin: 6px 0 4px auto; text-align: right; }
+
+/* ---------- área de arrastar e soltar arquivo ---------- */
+.soltar { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 26px 16px; margin-bottom: 14px; border: 2px dashed var(--cinza); border-radius: 14px; background: var(--campo); text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
+.soltar:hover, .soltar.sobre, .soltar:focus-within { border-color: var(--azul); background: color-mix(in srgb, var(--azul) 7%, var(--cartao)); }
+.soltar input { position: absolute; width: 1px; height: 1px; opacity: 0; padding: 0; border: 0; }
+.soltar-icone { width: 40px; height: 40px; border-radius: 50%; background: var(--cinza); color: var(--cartao); display: grid; place-items: center; }
+.soltar:hover .soltar-icone, .soltar.sobre .soltar-icone { background: var(--azul); }
+.soltar.pronto .soltar-icone { background: var(--verde); }
+.soltar-texto { font-size: 14px; color: var(--suave); overflow-wrap: anywhere; }
+.soltar-texto strong { color: var(--texto); }
+.soltar-texto u { color: var(--azul); font-weight: 600; text-decoration: none; }
+.soltar small { font-size: 12px; }
