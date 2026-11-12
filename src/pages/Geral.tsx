@@ -5,6 +5,7 @@ import { diasParaGastar, limiteLivre, pagadorDe, resumo, type ItemAPagar } from 
 import { alternarPago, marcarAcerto, useEstado } from '../store'
 import { brl, Check, cor, Ilustracao, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
+import { ParaOndeFoi } from '../PainelCategorias'
 import { FORMAS, GastoForm } from '../forms'
 import type { Gasto } from '../store'
 
@@ -224,6 +225,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
       </section>
 
       <GastosDoDia mes={mes} r={r} dias={dias} />
+      <ParaOndeFoi mes={mes} />
       <ContasAPagar mes={mes} itens={r.itens} />
 
       <section className="cartao a-divisao">

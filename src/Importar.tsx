@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { mesDaFatura } from './calc'
+import { categoriaDe, NOMES_CATEGORIA } from './categorias'
 import { lerArquivoFatura, paraCompras, type Lancamento } from './leitorFatura'
 import { importarCompras, novoId, useEstado, type Cartao } from './store'
 import { brl, Campo, Modal, nomeDoMes } from './ui'
@@ -92,7 +93,7 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
                   <small>
                     {c.lanc.data.slice(8, 10)}/{c.lanc.data.slice(5, 7)}
                     {c.parcela && ` · parcela ${c.parcela.n} de ${c.parcela.total}`}
-                    {c.aviso && ' · ' + AVISOS[c.aviso]}
+                    {c.aviso ? ' · ' + AVISOS[c.aviso] : c.lanc.valor > 0 && ' · ' + NOMES_CATEGORIA[categoriaDe(c.compra, e.regras[cartao.dono] ?? {})]}
                   </small>
                 </span>
                 <strong>{brl(c.lanc.valor)}</strong>

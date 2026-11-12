@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { faturaDoMes, limiteLivre } from '../calc'
 import { CartaoForm, CompraForm } from '../forms'
 import { ImportarFatura } from '../Importar'
+import { ChipCategoria, EscolherCategoria, type AlvoCategoria } from '../PainelCategorias'
+import { categoriaDe } from '../categorias'
 import { moverImportados, somaMes, useEstado, type Cartao, type Compra } from '../store'
 import { brl, nomeDoMes, Valor } from '../ui'
 
@@ -24,6 +26,8 @@ export function Cartoes({ mes }: { mes: string }) {
   const [cartao, setCartao] = useState<Cartao | 'novo' | null>(null)
   const [compra, setCompra] = useState<{ cartaoId: string; compra: Compra | null } | null>(null)
   const [importando, setImportando] = useState<Cartao | null>(null)
+  const [alvo, setAlvo] = useState<AlvoCategoria | null>(null)
+  const regras = e.regras[e.perfil] ?? {}
   const meus = e.cartoes.filter((c) => c.dono === e.perfil)
   const total = meus.reduce((s, c) => s + faturaDoMes(e, c, mes).total, 0)
 
@@ -60,6 +64,12 @@ export function Cartoes({ mes }: { mes: string }) {
                         {p.compra.origem && ' · importada'}
                       </small>
                     </span>
+                    {p.valor > 0 && (
+                      <ChipCategoria
+                        categoria={categoriaDe(p.compra, regras)}
+                        onClick={() => setAlvo({ tipo: 'compra', id: p.compra.id, descricao: p.compra.descricao, atual: categoriaDe(p.compra, regras) })}
+                      />
+                    )}
                     <strong>{brl(p.valor)}</strong>
                   </li>
                 ))}
@@ -95,6 +105,7 @@ export function Cartoes({ mes }: { mes: string }) {
       {meus.length === 0 && <p className="vazio">Nenhum cartão cadastrado.</p>}
 
       {cartao && <CartaoForm cartao={cartao === 'novo' ? null : cartao} mes={mes} onFechar={() => setCartao(null)} />}
+      {alvo && <EscolherCategoria alvo={alvo} onFechar={() => setAlvo(null)} />}
       {importando && <ImportarFatura cartao={importando} mes={mes} onFechar={() => setImportando(null)} />}
       {compra && <CompraForm compra={compra.compra} cartaoId={compra.cartaoId} mes={mes} onFechar={() => setCompra(null)} />}
     </section>

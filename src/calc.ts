@@ -1,3 +1,4 @@
+import { categoriaDe, ORDEM_CATEGORIAS, type Categoria } from './categorias'
 import { difMeses, mesAtual, type Cartao, type Compra, type Conta, type Estado, type Meta, type Quem } from './store'
 
 const soma = (l: { valor: number }[]) => l.reduce((s, c) => s + c.valor, 0)
@@ -180,4 +181,64 @@ export function resumo(e: Estado, mes: string, extra = 0) {
     itens, pendente: soma(itens.filter((i) => !i.pago)),
     moradia,
   }
+}
+
+export interface ItemCategoria {
+  tipo: 'compra' | 'gasto'
+  id: string
+  descricao: string
+  valor: number
+  /** de onde veio: "Cartão principal · 3/10", "Pix"… */
+  origem: string
+  categoria: Categoria
+}
+
+const NOME_FORMA = { pix: 'Pix', debito: 'Débito', dinheiro: 'Dinheiro', caixinha: 'Caixinha' }
+
+/**
+ * Para onde foi o dinheiro do perfil ativo no mês: parcelas dos seus cartões + gastos do dia a dia,
+ * agrupados por categoria. Créditos e estornos (valores negativos) ficam de fora; o "outros gastos"
+ * não detalhado da fatura aparece à parte, porque não dá para saber a categoria.
+ */
+export function gastosPorCategoria(e: Estado, mes: string) {
+  const eu = e.perfil
+  const regras = e.regras[eu] ?? {}
+  const itens: ItemCategoria[] = []
+  let semDetalhe = 0
+
+  for (const cartao of e.cartoes.filter((c) => c.dono === eu)) {
+    const f = faturaDoMes(e, cartao, mes)
+    semDetalhe += Math.max(f.base, 0)
+    for (const p of f.parcelas) {
+      if (p.valor <= 0) continue
+      itens.push({
+        tipo: 'compra',
+        id: p.compra.id,
+        descricao: p.compra.descricao,
+        valor: p.valor,
+        origem: cartao.nome + (p.compra.parcelas > 1 ? ` · parcela ${p.n} de ${p.compra.parcelas}` : ''),
+        categoria: categoriaDe(p.compra, regras),
+      })
+    }
+  }
+  for (const g of e.gastos) {
+    if (g.dono !== eu || g.forma === 'caixinha' || !g.data.startsWith(mes) || g.valor <= 0) continue
+    itens.push({
+      tipo: 'gasto',
+      id: g.id,
+      descricao: g.descricao || NOME_FORMA[g.forma],
+      valor: g.valor,
+      origem: NOME_FORMA[g.forma] + ' · ' + g.data.slice(8, 10) + '/' + g.data.slice(5, 7),
+      categoria: categoriaDe(g, regras),
+    })
+  }
+
+  const grupos = ORDEM_CATEGORIAS.map((categoria) => {
+    const l = itens.filter((i) => i.categoria === categoria).sort((a, b) => b.valor - a.valor)
+    return { categoria, total: soma(l), itens: l }
+  })
+    .filter((g) => g.total > 0)
+    .sort((a, b) => b.total - a.total)
+
+  return { grupos, semDetalhe, total: soma(itens) + semDetalhe }
 }

@@ -1,6 +1,7 @@
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js'
 import { useSyncExternalStore } from 'react'
 import { definir, lerEstado, limparLocal, registrarAoMudar, type Acerto, type Cartao, type Compra, type Conta, type Estado, type Gasto, type Meta, type Quem } from './store'
+import type { Categoria } from './categorias'
 
 /**
  * Sincronização entre computadores (opcional), sem login.
@@ -66,6 +67,7 @@ interface DocPessoa {
   compras?: Compra[]
   metas?: Meta[]
   gastos?: Gasto[]
+  regras?: Record<string, Categoria>
   pagos?: Pagos
 }
 
@@ -107,6 +109,7 @@ function separar(e: Estado): Docs {
       compras: e.compras.filter((x) => idsCartoes.has(x.cartaoId)),
       metas: e.metas.filter((x) => x.dono === q),
       gastos: e.gastos.filter((x) => x.dono === q),
+      regras: e.regras[q] ?? {},
       pagos: filtrarPagos(e.pagos, (id) => ids.has(id)),
     }
   }
@@ -142,6 +145,7 @@ function juntar(d: Docs, base: Estado): Estado {
     cartoes: [...(d.eu.cartoes ?? []), ...(d.par.cartoes ?? [])],
     compras: [...(d.eu.compras ?? []), ...(d.par.compras ?? [])],
     gastos: [...(d.eu.gastos ?? []), ...(d.par.gastos ?? [])],
+    regras: { eu: d.eu.regras ?? {}, par: d.par.regras ?? {} },
     metas: [...(d.casa.metas ?? []), ...(d.eu.metas ?? []), ...(d.par.metas ?? [])],
     acertos: d.casa.acertos ?? {},
     pagos,

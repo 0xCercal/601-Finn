@@ -1,4 +1,5 @@
 import { useSyncExternalStore } from 'react'
+import type { Categoria } from './categorias'
 
 export type Quem = 'eu' | 'par'
 
@@ -49,6 +50,8 @@ export interface Compra {
   mes: string
   /** chave do lançamento importado de uma fatura, para não importar duas vezes */
   origem?: string
+  /** categoria escolhida só para esta compra (senão vale a regra ou a automática) */
+  categoria?: Categoria
 }
 
 /**
@@ -80,6 +83,8 @@ export interface Gasto {
   dono: Quem
   /** depósito (ou retirada, se negativo) numa caixinha */
   metaId?: string
+  /** categoria escolhida só para este gasto */
+  categoria?: Categoria
 }
 
 /** Registro de que o acerto da divisão da casa de um mês foi feito. */
@@ -105,6 +110,8 @@ export interface Estado {
   compras: Compra[]
   metas: Meta[]
   gastos: Gasto[]
+  /** categoria aprendida por estabelecimento, de cada pessoa */
+  regras: Record<Quem, Record<string, Categoria>>
   /** ids pagos por mês ('AAAA-MM') */
   pagos: Record<string, string[]>
   /** acerto da casa por mês ('AAAA-MM') */
@@ -180,6 +187,7 @@ function exemplo(): Estado {
       { id: novoId(), descricao: 'Feira', valor: 62, data: m + '-08', forma: 'dinheiro', dono: 'eu' },
       { id: novoId(), descricao: '', valor: 300, data: m + '-10', forma: 'caixinha', dono: 'eu', metaId: viagem },
     ],
+    regras: { eu: {}, par: {} },
     pagos: {},
     acertos: {},
     tema: 'claro',
@@ -199,6 +207,7 @@ function carregar(): Estado {
         metas: salvo.metas ?? [],
         acertos: salvo.acertos ?? {},
         gastos: salvo.gastos ?? [],
+        regras: salvo.regras ?? { eu: {}, par: {} },
       }
       e.cartoes = e.cartoes.map((c) => ({ ...c, dono: c.dono ?? 'eu' }))
       if (e.nomeEu === 'Você') e.nomeEu = 'Pessoa 1'
@@ -308,6 +317,19 @@ export const excluirCompra = (id: string) => alterar((e) => ({ ...e, compras: e.
 
 export const salvarMeta = (m: Meta) => alterar((e) => ({ ...e, metas: gravar(e.metas, m) }))
 export const excluirMeta = (id: string) => alterar((e) => ({ ...e, metas: e.metas.filter((m) => m.id !== id) }))
+
+/** Define a categoria de uma compra ou gasto; com `todas`, aprende para o estabelecimento inteiro. */
+export function definirCategoria(tipo: 'compra' | 'gasto', id: string, categoria: Categoria, todas: { dono: Quem; chave: string } | null) {
+  const aplicar = <T extends { id: string; categoria?: Categoria }>(lista: T[]) =>
+    // aprendendo para todas, o item segue a regra; senão guarda a escolha só nele
+    lista.map((x) => (x.id !== id ? x : todas ? { ...x, categoria: undefined } : { ...x, categoria }))
+  alterar((e) => ({
+    ...e,
+    compras: tipo === 'compra' ? aplicar(e.compras) : e.compras,
+    gastos: tipo === 'gasto' ? aplicar(e.gastos) : e.gastos,
+    regras: todas ? { ...e.regras, [todas.dono]: { ...e.regras[todas.dono], [todas.chave]: categoria } } : e.regras,
+  }))
+}
 
 export const salvarGasto = (g: Gasto) => alterar((e) => ({ ...e, gastos: gravar(e.gastos, g) }))
 export const excluirGasto = (id: string) => alterar((e) => ({ ...e, gastos: e.gastos.filter((g) => g.id !== id) }))
