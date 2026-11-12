@@ -404,3 +404,12 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
   .par { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .col-esq > *, .col-dir > *, .par > * { grid-area: auto; }
 }
+
+/* ---------- moradia: o que entra na conta ---------- */
+.entra { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 10px; margin: 10px 0 8px; }
+.entra li { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.entra-icone { flex: none; width: 34px; height: 34px; border-radius: 10px; background: color-mix(in srgb, var(--azul) 10%, var(--cartao)); color: var(--azul); display: grid; place-items: center; }
+.entra-texto { min-width: 0; }
+.entra-texto small, .entra-texto strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entra-texto small { font-size: 12px; }
+.entra-texto strong { font-size: 14px; }

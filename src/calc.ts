@@ -171,7 +171,14 @@ export function resumo(e: Estado, mes: string, extra = 0) {
     .map((c) => ({ ...c, pago: pagos.includes(c.id) }))
     .sort((a, b) => a.dia - b.dia)
 
-  const moradia = casa.filter((c) => c.moradia).reduce((s, c) => s + parteDe(c, v.eu), 0) + soma(pess.filter((c) => c.moradia))
+  /** contas marcadas como moradia, com a parte que cabe a mim (0 se a conta é só da outra pessoa) */
+  const itensMoradia = [
+    ...casa.filter((c) => c.moradia).map((c) => ({ id: c.id, nome: c.nome, valor: parteDe(c, v.eu), total: c.valor, estimado: c.estimado })),
+    ...pess.filter((c) => c.moradia).map((c) => ({ id: c.id, nome: c.nome, valor: c.valor, total: c.valor, estimado: c.estimado })),
+  ]
+    .filter((i) => i.valor > 0)
+    .sort((a, b) => b.valor - a.valor)
+  const moradia = soma(itensMoradia)
 
   return {
     ...v,
@@ -179,7 +186,7 @@ export function resumo(e: Estado, mes: string, extra = 0) {
     faturas, totalFaturas, pessoais, livre, sobra,
     lancamentos, gastos, totalGastos, totalGuardado, diaADiaUsado, disponivel,
     itens, pendente: soma(itens.filter((i) => !i.pago)),
-    moradia,
+    moradia, itensMoradia,
   }
 }
 

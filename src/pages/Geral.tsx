@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Check as Ok } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Building2, Check as Ok, Droplets, Flame, House, KeyRound, Landmark, Wifi, Zap, type LucideIcon } from 'lucide-react'
 import type { Pagina } from '../App'
 import { useEffect, useState } from 'react'
 import { diasParaGastar, limiteLivre, pagadorDe, resumo, type ItemAPagar } from '../calc'
@@ -8,6 +8,19 @@ import { CartaoVisual } from './Cartoes'
 import { ParaOndeFoi } from '../PainelCategorias'
 import { FORMAS, GastoForm } from '../forms'
 import type { Gasto } from '../store'
+
+/** Ícone de uma conta de moradia, pelo nome. */
+function iconeMoradia(nome: string): LucideIcon {
+  const n = nome.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase()
+  if (/alug/.test(n)) return KeyRound
+  if (/condom/.test(n)) return Building2
+  if (/luz|energia|eletric|enel|cpfl|cemig|light/.test(n)) return Zap
+  if (/internet|wifi|wi-fi|fibra|banda larga/.test(n)) return Wifi
+  if (/gas/.test(n)) return Flame
+  if (/agua|sabesp|saneamento/.test(n)) return Droplets
+  if (/financ|parcela|prestac|iptu|caixa/.test(n)) return Landmark
+  return House
+}
 
 const dataCurta = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
 
@@ -341,6 +354,27 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
             <b />
           </div>
           <div className="escala"><small>0%</small><small>30%</small><small>60%</small></div>
+
+          <h4>O que entra na conta</h4>
+          {r.itensMoradia.length > 0 ? (
+            <ul className="entra">
+              {r.itensMoradia.map((i) => {
+                const Icone = iconeMoradia(i.nome)
+                return (
+                  <li key={i.id}>
+                    <span className="entra-icone"><Icone size={16} /></span>
+                    <span className="entra-texto">
+                      <small>{i.nome}</small>
+                      <strong>{i.estimado && '≈ '}{brl(i.valor)}</strong>
+                    </span>
+                  </li>
+                )
+              })}
+            </ul>
+          ) : (
+            <p className="apoio">Nenhuma conta marcada como moradia. Edite a conta e marque "Conta de moradia".</p>
+          )}
+          {r.itensMoradia.some((i) => i.valor < i.total) && <p className="apoio">Nas contas divididas, aparece só a sua parte.</p>}
         </section>
 
         <ParaOndeFoi mes={mes} />
