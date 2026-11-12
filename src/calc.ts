@@ -1,4 +1,4 @@
-import { difMeses, mesAtual, type Cartao, type Compra, type Conta, type Estado, type Quem } from './store'
+import { difMeses, mesAtual, type Cartao, type Compra, type Conta, type Estado, type Meta, type Quem } from './store'
 
 const soma = (l: { valor: number }[]) => l.reduce((s, c) => s + c.valor, 0)
 
@@ -39,6 +39,13 @@ export function parteDe(c: Conta, q: Quem) {
   const d = c.divisao ?? 'meio'
   return d === 'meio' ? c.valor / 2 : d === q ? c.valor : 0
 }
+
+/** Soma dos depósitos lançados numa caixinha (todos, ou só os de um mês 'AAAA-MM'). */
+export const depositosDaCaixinha = (e: Estado, metaId: string, mes?: string) =>
+  e.gastos.filter((g) => g.metaId === metaId && (!mes || g.data.startsWith(mes))).reduce((s, g) => s + g.valor, 0)
+
+/** Saldo da caixinha: base informada + depósitos lançados. */
+export const saldoDaCaixinha = (e: Estado, m: Meta) => m.guardado + depositosDaCaixinha(e, m.id)
 
 /** Contas que existem no mês: as recorrentes e os lançamentos avulsos daquele mês. */
 export const contasDoMes = (e: Estado, mes: string) => e.contas.filter((c) => !c.mes || c.mes === mes)
@@ -123,13 +130,16 @@ export function resumo(e: Estado, mes: string, extra = 0) {
   const pessoais = soma(pess) + totalFaturas + extra
   /** o que sobra do salário depois de todas as contas, antes da reserva do dia a dia */
   const livre = v.salario - parteCasa - pessoais
-  const gastos = e.gastos.filter((g) => g.dono === v.eu && g.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data))
+  const lancamentos = e.gastos.filter((g) => g.dono === v.eu && g.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data))
+  const gastos = lancamentos.filter((g) => g.forma !== 'caixinha')
   const totalGastos = soma(gastos)
+  /** o que foi para as caixinhas no mês: não consome a reserva, sai direto da sobra */
+  const totalGuardado = soma(lancamentos.filter((g) => g.forma === 'caixinha'))
   /** a reserva do dia a dia é consumida pelos gastos lançados; o que passar dela sai da sobra */
   const diaADiaUsado = Math.max(v.diaADia, totalGastos)
-  const sobra = livre - diaADiaUsado
+  const sobra = livre - diaADiaUsado - totalGuardado
   /** o que ainda está livre agora: salário − contas − gastos já feitos */
-  const disponivel = livre - totalGastos
+  const disponivel = livre - totalGastos - totalGuardado
 
   const pagos = e.pagos[mes] ?? []
   const itens: ItemAPagar[] = [
@@ -149,7 +159,7 @@ export function resumo(e: Estado, mes: string, extra = 0) {
     ...v,
     casa, totalCasa, parteCasa, pagoEu, pagoPar, acerto,
     faturas, totalFaturas, pessoais, livre, sobra,
-    gastos, totalGastos, diaADiaUsado, disponivel,
+    lancamentos, gastos, totalGastos, totalGuardado, diaADiaUsado, disponivel,
     itens, pendente: soma(itens.filter((i) => !i.pago)),
     moradia,
   }

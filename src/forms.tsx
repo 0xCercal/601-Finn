@@ -4,7 +4,7 @@ import {
   salvarGasto, salvarMeta, useEstado,
   type Cartao, type Compra, type Conta, type Forma, type Gasto, type Meta, type Quem,
 } from './store'
-import { valorNoMes } from './calc'
+import { depositosDaCaixinha, valorNoMes } from './calc'
 import { brl, Campo, lerValor, Modal, nomeDoMes, paraCampo } from './ui'
 
 const diaValido = (txt: string) => Math.min(31, Math.max(1, parseInt(txt) || 1))
@@ -266,12 +266,14 @@ export function CompraForm({ compra, cartaoId, mes, onFechar }: { compra: Compra
 }
 
 export function MetaForm({ meta, onFechar }: { meta: Meta | null; onFechar: () => void }) {
-  const { perfil } = useEstado()
+  const e = useEstado()
+  // o saldo mostrado já inclui os depósitos lançados; ao salvar, a base é ajustada para bater com o digitado
+  const depositos = meta ? depositosDaCaixinha(e, meta.id) : 0
   const [nome, setNome] = useState(meta?.nome ?? '')
+  const [saldo, setSaldo] = useState(paraCampo(meta ? meta.guardado + depositos : 0))
   const [alvo, setAlvo] = useState(paraCampo(meta?.alvo ?? 0))
-  const [guardado, setGuardado] = useState(paraCampo(meta?.guardado ?? 0))
   const [aporte, setAporte] = useState(paraCampo(meta?.aporte ?? 0))
-  const [daCasa, setDaCasa] = useState(meta ? meta.dono === 'casa' : true)
+  const [daCasa, setDaCasa] = useState(meta ? meta.dono === 'casa' : false)
 
   function enviar(ev: FormEvent) {
     ev.preventDefault()
@@ -279,35 +281,36 @@ export function MetaForm({ meta, onFechar }: { meta: Meta | null; onFechar: () =
     salvarMeta({
       id: meta?.id ?? novoId(),
       nome: nome.trim(),
+      guardado: lerValor(saldo) - depositos,
       alvo: lerValor(alvo),
-      guardado: lerValor(guardado),
       aporte: lerValor(aporte),
-      dono: daCasa ? 'casa' : meta && meta.dono !== 'casa' ? meta.dono : perfil,
+      dono: daCasa ? 'casa' : meta && meta.dono !== 'casa' ? meta.dono : e.perfil,
     })
     onFechar()
   }
 
   return (
-    <Modal titulo={meta ? 'Editar objetivo' : 'Novo objetivo'} onFechar={onFechar}>
+    <Modal titulo={meta ? 'Editar caixinha' : 'Nova caixinha'} onFechar={onFechar}>
       <form onSubmit={enviar}>
         <Campo rotulo="Nome">
-          <input value={nome} onChange={(ev) => setNome(ev.target.value)} placeholder="Ex.: Viagem de férias" autoFocus required />
+          <input value={nome} onChange={(ev) => setNome(ev.target.value)} placeholder="Ex.: Reserva de emergência" autoFocus required />
         </Campo>
+        <Campo rotulo="Saldo atual da caixinha (R$)">
+          <input value={saldo} onChange={(ev) => setSaldo(ev.target.value)} inputMode="decimal" placeholder="0,00" />
+        </Campo>
+        <p className="apoio espaco">Copie o valor que aparece na caixinha do banco. Dá para corrigir aqui sempre que precisar.</p>
         <div className="duas">
-          <Campo rotulo="Quanto quer juntar (R$)">
-            <input value={alvo} onChange={(ev) => setAlvo(ev.target.value)} inputMode="decimal" placeholder="0,00" />
+          <Campo rotulo="Meta (opcional, R$)">
+            <input value={alvo} onChange={(ev) => setAlvo(ev.target.value)} inputMode="decimal" placeholder="sem meta" />
           </Campo>
-          <Campo rotulo="Já guardado (R$)">
-            <input value={guardado} onChange={(ev) => setGuardado(ev.target.value)} inputMode="decimal" placeholder="0,00" />
+          <Campo rotulo="Guarda por mês (opcional, R$)">
+            <input value={aporte} onChange={(ev) => setAporte(ev.target.value)} inputMode="decimal" placeholder="0,00" />
           </Campo>
         </div>
-        <Campo rotulo="Quanto guarda por mês (R$)">
-          <input value={aporte} onChange={(ev) => setAporte(ev.target.value)} inputMode="decimal" placeholder="0,00" />
-        </Campo>
         <Campo rotulo="De quem é">
           <div className="abas">
+            <button type="button" className={daCasa ? '' : 'ativo'} onClick={() => setDaCasa(false)}>Só minha</button>
             <button type="button" className={daCasa ? 'ativo' : ''} onClick={() => setDaCasa(true)}>Da casa (os dois veem)</button>
-            <button type="button" className={daCasa ? '' : 'ativo'} onClick={() => setDaCasa(false)}>Só meu</button>
           </div>
         </Campo>
         <footer>
@@ -321,59 +324,88 @@ export function MetaForm({ meta, onFechar }: { meta: Meta | null; onFechar: () =
   )
 }
 
-export const FORMAS: Record<Forma, string> = { pix: 'Pix', debito: 'Débito', dinheiro: 'Dinheiro' }
+export const FORMAS: Record<Forma, string> = { pix: 'Pix', debito: 'Débito', dinheiro: 'Dinheiro', caixinha: 'Caixinha' }
 
-/** Lançamento rápido de um gasto do dia a dia: valor, forma e, se quiser, uma descrição. */
-export function GastoForm({ gasto, mes, onFechar }: { gasto: Gasto | null; mes: string; onFechar: () => void }) {
-  const { perfil } = useEstado()
+/**
+ * Lançamento rápido: um gasto do dia a dia (Pix, débito, dinheiro) ou um depósito numa caixinha.
+ * `metaInicial` abre já como depósito naquela caixinha.
+ */
+export function GastoForm({ gasto, mes, metaInicial, onFechar }: { gasto: Gasto | null; mes: string; metaInicial?: string; onFechar: () => void }) {
+  const e = useEstado()
+  const caixinhas = e.metas.filter((m) => m.dono === 'casa' || m.dono === e.perfil)
   const [valor, setValor] = useState(paraCampo(gasto?.valor ?? 0))
   const [descricao, setDescricao] = useState(gasto?.descricao ?? '')
-  const [forma, setForma] = useState<Forma>(gasto?.forma ?? 'pix')
+  const [forma, setForma] = useState<Forma>(gasto?.forma ?? (metaInicial ? 'caixinha' : 'pix'))
+  const [metaId, setMetaId] = useState(gasto?.metaId ?? metaInicial ?? caixinhas[0]?.id ?? '')
   // no mês atual, hoje; em outro mês, o dia 1 daquele mês
   const [data, setData] = useState(gasto?.data ?? (mes === mesAtual() ? hojeISO() : mes + '-01'))
-  const [erro, setErro] = useState(false)
+  const [erro, setErro] = useState<string | null>(null)
+  const ehCaixinha = forma === 'caixinha'
 
   function enviar(ev: FormEvent) {
     ev.preventDefault()
     const v = lerValor(valor)
-    if (v <= 0 || !data) {
-      setErro(true)
-      return
-    }
-    salvarGasto({ id: gasto?.id ?? novoId(), descricao: descricao.trim(), valor: v, data, forma, dono: gasto?.dono ?? perfil })
+    // na caixinha, valor negativo é uma retirada
+    if (ehCaixinha ? v === 0 : v <= 0) return setErro('Digite um valor maior que zero.')
+    if (ehCaixinha && !metaId) return setErro('Escolha a caixinha.')
+    if (!data) return setErro('Escolha a data.')
+    salvarGasto({
+      id: gasto?.id ?? novoId(),
+      descricao: descricao.trim(),
+      valor: v,
+      data,
+      forma,
+      dono: gasto?.dono ?? e.perfil,
+      ...(ehCaixinha ? { metaId } : {}),
+    })
     onFechar()
   }
 
   return (
-    <Modal titulo={gasto ? 'Editar gasto' : 'Lançar gasto'} onFechar={onFechar}>
+    <Modal titulo={gasto ? 'Editar lançamento' : ehCaixinha ? 'Guardar na caixinha' : 'Lançar gasto'} onFechar={onFechar}>
       <form onSubmit={enviar}>
-        <Campo rotulo="Valor (R$)">
+        <Campo rotulo={ehCaixinha ? 'Valor guardado (R$; negativo se retirou)' : 'Valor (R$)'}>
           <input
             className="valor-grande"
             value={valor}
-            onChange={(ev) => { setValor(ev.target.value); setErro(false) }}
+            onChange={(ev) => { setValor(ev.target.value); setErro(null) }}
             inputMode="decimal"
             placeholder="0,00"
             autoFocus
           />
         </Campo>
-        {erro && <p className="aviso espaco">Digite um valor maior que zero.</p>}
-        <Campo rotulo="Como pagou">
+        {erro && <p className="aviso espaco">{erro}</p>}
+        <Campo rotulo="O que foi">
           <div className="abas">
             {(Object.keys(FORMAS) as Forma[]).map((f) => (
-              <button type="button" key={f} className={forma === f ? 'ativo' : ''} onClick={() => setForma(f)}>{FORMAS[f]}</button>
+              <button type="button" key={f} className={forma === f ? 'ativo' : ''} onClick={() => { setForma(f); setErro(null) }}>{FORMAS[f]}</button>
             ))}
           </div>
         </Campo>
+        {ehCaixinha && (
+          caixinhas.length ? (
+            <Campo rotulo="Qual caixinha">
+              <select value={metaId} onChange={(ev) => setMetaId(ev.target.value)}>
+                {caixinhas.map((m) => <option key={m.id} value={m.id}>{m.nome}</option>)}
+              </select>
+            </Campo>
+          ) : (
+            <p className="aviso espaco">Nenhuma caixinha ainda. Crie uma na aba Caixinhas.</p>
+          )
+        )}
         <div className="duas">
           <Campo rotulo="Descrição (opcional)">
-            <input value={descricao} onChange={(ev) => setDescricao(ev.target.value)} placeholder="Ex.: Padaria" />
+            <input value={descricao} onChange={(ev) => setDescricao(ev.target.value)} placeholder={ehCaixinha ? 'Ex.: Sobra do mês' : 'Ex.: Padaria'} />
           </Campo>
           <Campo rotulo="Data">
             <input type="date" value={data} onChange={(ev) => setData(ev.target.value)} />
           </Campo>
         </div>
-        <p className="apoio espaco">Só você vê. Desconta da sua reserva do dia a dia.</p>
+        <p className="apoio espaco">
+          {ehCaixinha
+            ? 'Soma no saldo da caixinha e sai da sobra do mês (não da reserva do dia a dia).'
+            : 'Só você vê. Desconta da sua reserva do dia a dia.'}
+        </p>
         <footer>
           {gasto && (
             <button type="button" className="botao perigo" onClick={() => { excluirGasto(gasto.id); onFechar() }}>Excluir</button>

@@ -51,18 +51,23 @@ export interface Compra {
   origem?: string
 }
 
-/** Objetivo de poupança, da casa ou de uma pessoa. */
+/**
+ * Caixinha de poupança (como as do banco), da casa ou de uma pessoa.
+ * Saldo = `guardado` (base informada) + depósitos lançados como gasto com forma 'caixinha'.
+ */
 export interface Meta {
   id: string
   nome: string
+  /** meta a alcançar; 0 = sem meta */
   alvo: number
+  /** saldo base, sem contar os depósitos lançados no app */
   guardado: number
-  /** quanto se pretende guardar por mês */
+  /** quanto se pretende guardar por mês (só para a previsão) */
   aporte: number
   dono: Quem | 'casa'
 }
 
-export type Forma = 'pix' | 'debito' | 'dinheiro'
+export type Forma = 'pix' | 'debito' | 'dinheiro' | 'caixinha'
 
 /** Gasto do dia a dia (Pix, débito, dinheiro). É pessoal: só o dono vê. */
 export interface Gasto {
@@ -73,6 +78,8 @@ export interface Gasto {
   data: string
   forma: Forma
   dono: Quem
+  /** depósito (ou retirada, se negativo) numa caixinha */
+  metaId?: string
 }
 
 /** Registro de que o acerto da divisão da casa de um mês foi feito. */
@@ -134,6 +141,7 @@ function exemplo(): Estado {
     id: novoId(), nome, valor, dia, tipo, pagador, moradia,
   })
   const principal = novoId()
+  const viagem = novoId()
   return {
     nomeEu: 'Pessoa 1',
     nomePar: 'Pessoa 2',
@@ -163,13 +171,14 @@ function exemplo(): Estado {
       { id: novoId(), cartaoId: principal, descricao: 'Tênis', valor: 480, parcelas: 3, mes: m },
     ],
     metas: [
-      { id: novoId(), nome: 'Viagem de férias', alvo: 8000, guardado: 2500, aporte: 500, dono: 'casa' },
+      { id: viagem, nome: 'Viagem de férias', alvo: 8000, guardado: 2500, aporte: 500, dono: 'casa' },
       { id: novoId(), nome: 'Reserva de emergência', alvo: 20000, guardado: 6000, aporte: 1000, dono: 'eu' },
     ],
     gastos: [
       { id: novoId(), descricao: 'Padaria', valor: 23.5, data: m + '-02', forma: 'pix', dono: 'eu' },
       { id: novoId(), descricao: 'Farmácia', valor: 48.9, data: m + '-05', forma: 'debito', dono: 'eu' },
       { id: novoId(), descricao: 'Feira', valor: 62, data: m + '-08', forma: 'dinheiro', dono: 'eu' },
+      { id: novoId(), descricao: '', valor: 300, data: m + '-10', forma: 'caixinha', dono: 'eu', metaId: viagem },
     ],
     pagos: {},
     acertos: {},

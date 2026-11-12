@@ -5,7 +5,7 @@ import { diasParaGastar, limiteLivre, pagadorDe, resumo, type ItemAPagar } from 
 import { alternarPago, marcarAcerto, useEstado } from '../store'
 import { brl, Check, cor, Ilustracao, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
-import { GastoForm } from '../forms'
+import { FORMAS, GastoForm } from '../forms'
 import type { Gasto } from '../store'
 
 const dataCurta = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
@@ -85,18 +85,27 @@ function ContasAPagar({ mes, itens }: { mes: string; itens: ItemAPagar[] }) {
   )
 }
 
-const FORMA_CURTA = { pix: 'Pix', debito: 'Débito', dinheiro: 'Dinheiro' }
-
-/** Gastos do dia a dia do mês: quanto da reserva já foi e a lista dos lançamentos. */
-function GastosDoDia({ mes, gastos, total, reserva, dias }: { mes: string; gastos: Gasto[]; total: number; reserva: number; dias: number }) {
+/** Gastos do dia a dia do mês: quanto da reserva já foi, o que foi para as caixinhas e a lista dos lançamentos. */
+function GastosDoDia({ mes, r, dias }: { mes: string; r: ReturnType<typeof resumo>; dias: number }) {
+  const e = useEstado()
   const [editando, setEditando] = useState<Gasto | 'novo' | null>(null)
+  const reserva = r.diaADia
+  const total = r.totalGastos
   const resta = reserva - total
   const usado = reserva > 0 ? total / reserva : 0
+  const nomeCaixinha = (id?: string) => e.metas.find((m) => m.id === id)?.nome ?? 'caixinha removida'
+  const lista = r.lancamentos
+
   const item = (g: Gasto) => (
     <li key={g.id} className="clicavel" onClick={() => setEditando(g)}>
       <span className="nome">
-        {g.descricao || FORMA_CURTA[g.forma]}
-        <small>{g.data.slice(8, 10)}/{g.data.slice(5, 7)} · <span className="forma">{FORMA_CURTA[g.forma]}</span></small>
+        {g.descricao || (g.forma === 'caixinha' ? nomeCaixinha(g.metaId) : FORMAS[g.forma])}
+        <small>
+          {g.data.slice(8, 10)}/{g.data.slice(5, 7)} ·{' '}
+          <span className={'forma' + (g.forma === 'caixinha' ? ' caixinha' : '')}>
+            {g.forma === 'caixinha' ? (g.valor < 0 ? 'Retirada · ' : 'Caixinha · ') + nomeCaixinha(g.metaId) : FORMAS[g.forma]}
+          </span>
+        </small>
       </span>
       <strong>{brl(g.valor)}</strong>
     </li>
@@ -129,15 +138,20 @@ function GastosDoDia({ mes, gastos, total, reserva, dias }: { mes: string; gasto
           </p>
         </>
       )}
+      {r.totalGuardado !== 0 && (
+        <p className="apoio guardado">
+          Guardado nas caixinhas este mês: <strong>{brl(r.totalGuardado)}</strong> · sai da sobra, não da reserva
+        </p>
+      )}
 
       <ul className="lista simples">
-        {gastos.slice(0, 5).map(item)}
-        {gastos.length === 0 && <li className="vazio">Nenhum gasto lançado em {nomeDoMes(mes)}.</li>}
+        {lista.slice(0, 5).map(item)}
+        {lista.length === 0 && <li className="vazio">Nenhum lançamento em {nomeDoMes(mes)}.</li>}
       </ul>
-      {gastos.length > 5 && (
+      {lista.length > 5 && (
         <details>
-          <summary>Ver todos os {gastos.length} gastos</summary>
-          <ul className="lista simples">{gastos.slice(5).map(item)}</ul>
+          <summary>Ver todos os {lista.length} lançamentos</summary>
+          <ul className="lista simples">{lista.slice(5).map(item)}</ul>
         </details>
       )}
 
@@ -149,7 +163,7 @@ function GastosDoDia({ mes, gastos, total, reserva, dias }: { mes: string; gasto
 export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const e = useEstado()
   const r = resumo(e, mes)
-  const base = Math.max(r.salario, r.parteCasa + r.pessoais + r.diaADiaUsado, 1)
+  const base = Math.max(r.salario, r.parteCasa + r.pessoais + r.diaADiaUsado + Math.max(r.totalGuardado, 0), 1)
   const pctMoradia = pct(r.moradia, r.salario)
   const pctEu = pct(r.pagoEu, r.totalCasa)
   const dias = diasParaGastar(mes)
@@ -163,6 +177,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
     { rotulo: 'Sua parte da casa', v: r.parteCasa, cor: 'var(--marinho)' },
     { rotulo: 'Contas pessoais', v: r.pessoais, cor: 'var(--azul)' },
     { rotulo: 'Dia a dia', v: r.diaADiaUsado, cor: 'var(--cinza)' },
+    ...(r.totalGuardado !== 0 ? [{ rotulo: 'Caixinhas', v: r.totalGuardado, cor: 'var(--dourado)' }] : []),
     { rotulo: 'Sobra', v: Math.max(r.sobra, 0), cor: 'var(--verde)' },
   ]
 
@@ -197,18 +212,18 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
             <span>Salário</span>
             <strong>{brl(r.salario)}</strong>
           </div>
-          {fatias.map((f, i) => (
+          {fatias.map((f) => (
             <div key={f.rotulo}>
               <span><i style={{ background: f.cor }} /> {f.rotulo}</span>
-              <strong className={i === 3 ? (r.sobra < 0 ? 'negativo' : 'positivo') : ''}>
-                {i === 3 ? brl(r.sobra) : '− ' + brl(f.v)} <small>{pct(i === 3 ? r.sobra : f.v, r.salario)}%</small>
+              <strong className={f.rotulo === 'Sobra' ? (r.sobra < 0 ? 'negativo' : 'positivo') : ''}>
+                {f.rotulo === 'Sobra' ? brl(r.sobra) : '− ' + brl(f.v)} <small>{pct(f.rotulo === 'Sobra' ? r.sobra : f.v, r.salario)}%</small>
               </strong>
             </div>
           ))}
         </div>
       </section>
 
-      <GastosDoDia mes={mes} gastos={r.gastos} total={r.totalGastos} reserva={r.diaADia} dias={dias} />
+      <GastosDoDia mes={mes} r={r} dias={dias} />
       <ContasAPagar mes={mes} itens={r.itens} />
 
       <section className="cartao a-divisao">

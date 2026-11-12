@@ -20,7 +20,7 @@ const MENU: { id: Pagina; rotulo: string; curto: string; Icone: typeof LayoutGri
   { id: 'fluxo', rotulo: 'Fluxo de caixa', curto: 'Fluxo', Icone: TrendingUp },
   { id: 'contas', rotulo: 'Contas', curto: 'Contas', Icone: Building2 },
   { id: 'cartoes', rotulo: 'Cartões', curto: 'Cartões', Icone: CreditCard },
-  { id: 'metas', rotulo: 'Objetivos', curto: 'Metas', Icone: Target },
+  { id: 'metas', rotulo: 'Caixinhas', curto: 'Caixinhas', Icone: Target },
   { id: 'ajustes', rotulo: 'Ajustes', curto: 'Ajustes', Icone: Settings },
 ]
 
@@ -90,7 +90,7 @@ export default function App() {
         {pagina === 'contas' && <Contas mes={mes} onEditar={setConta} />}
         {pagina === 'cartoes' && <Cartoes mes={mes} />}
         {pagina === 'fluxo' && <Fluxo mes={mes} />}
-        {pagina === 'metas' && <Metas />}
+        {pagina === 'metas' && <Metas mes={mes} />}
         {pagina === 'ajustes' && <Ajustes />}
       </main>
 

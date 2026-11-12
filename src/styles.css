@@ -9,10 +9,12 @@
   --marinho: #1e3a8a;
   --verde: #16a34a;
   --rosa: #f43f5e;
+  --dourado: #d97706;
   --cinza: #d1d5db;
   --sombra: 0 1px 2px rgba(16, 24, 40, 0.05);
 }
 :root[data-theme='escuro'] {
+  --dourado: #f59e0b;
   --fundo: #0b0f17;
   --cartao: #151b26;
   --texto: #f3f4f6;
@@ -127,7 +129,7 @@ h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 .barra.medidor i { border-radius: 99px; }
 .escala { display: flex; justify-content: space-between; font-size: 11px; }
 
-.legenda { display: grid; grid-template-columns: repeat(5, auto); gap: 12px; justify-content: space-between; }
+.legenda { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 12px; }
 .legenda span { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--suave); }
 .legenda span i, .ponto { width: 7px; height: 7px; border-radius: 50%; display: inline-block; flex: none; }
 .legenda strong { font-size: 15px; white-space: nowrap; }
@@ -252,6 +254,9 @@ h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 .a-gastos .cabeca .botao { flex: none; }
 .a-gastos .barra.medidor { margin: 14px 0 8px; }
 .a-gastos details summary { cursor: pointer; color: var(--suave); font-size: 13px; font-weight: 500; padding: 10px 0 2px; }
+.forma.caixinha { background: color-mix(in srgb, var(--dourado) 16%, var(--cartao)); color: var(--dourado); }
+.a-gastos .guardado { margin-top: 6px; }
+select { width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--linha); background: var(--campo); color: var(--texto); font: inherit; }
 .forma { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--campo); color: var(--suave); }
 
 /* ---------- faixa de dias (contas a pagar) ---------- */
