@@ -286,6 +286,24 @@ export function importarCompras(cartaoId: string, novas: Compra[], zerarOutrosEm
   }))
 }
 
+/**
+ * Move para `delta` meses depois as compras importadas que aparecem na fatura de `mes`
+ * (corrige uma fatura importada no mês errado).
+ */
+export function moverImportados(cartaoId: string, mes: string, delta: number) {
+  alterar((e) => ({
+    ...e,
+    compras: e.compras.map((c) => {
+      const d = difMeses(c.mes, mes)
+      if (c.cartaoId !== cartaoId || !c.origem || d < 0 || d >= c.parcelas) return c
+      const novoMes = somaMes(c.mes, delta)
+      // a chave das parceladas guarda o mês de início; atualiza para a reimportação reconhecer
+      const origem = c.origem.startsWith('parc|') ? c.origem.replace('|' + c.mes + '|', '|' + novoMes + '|') : c.origem
+      return { ...c, mes: novoMes, origem }
+    }),
+  }))
+}
+
 export const excluirCompra = (id: string) => alterar((e) => ({ ...e, compras: e.compras.filter((c) => c.id !== id) }))
 
 export const salvarMeta = (m: Meta) => alterar((e) => ({ ...e, metas: gravar(e.metas, m) }))

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { mesDaFatura } from './calc'
 import { lerArquivoFatura, paraCompras, type Lancamento } from './leitorFatura'
 import { importarCompras, novoId, useEstado, type Cartao } from './store'
 import { brl, Campo, Modal, nomeDoMes } from './ui'
@@ -13,6 +14,7 @@ const AVISOS = {
 export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes: string; onFechar: () => void }) {
   const e = useEstado()
   const [faturaMes, setFaturaMes] = useState(mes)
+  const [sugerido, setSugerido] = useState(false)
   const [lancs, setLancs] = useState<Lancamento[] | null>(null)
   const [arquivo, setArquivo] = useState('')
   const [erro, setErro] = useState<string | null>(null)
@@ -41,6 +43,12 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
       const l = lerArquivoFatura(f.name, await f.text())
       if (!l.length) throw new Error('Não encontrei lançamentos nesse arquivo.')
       setLancs(l)
+      // a fatura é a do vencimento seguinte à última compra do arquivo
+      const ultima = l.filter((x) => x.valor > 0).map((x) => x.data).sort().pop()
+      if (ultima) {
+        setFaturaMes(mesDaFatura(ultima, cartao.diaVence))
+        setSugerido(true)
+      }
     } catch (err) {
       setErro((err as Error).message)
     }
@@ -61,8 +69,13 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
         <input type="file" accept=".csv,.ofx,.txt,.pdf" onChange={(ev) => void abrir(ev.target.files?.[0])} />
       </Campo>
       <Campo rotulo="Fatura de">
-        <input type="month" value={faturaMes} onChange={(ev) => setFaturaMes(ev.target.value)} />
+        <input type="month" value={faturaMes} onChange={(ev) => { setFaturaMes(ev.target.value); setSugerido(false) }} />
       </Campo>
+      {sugerido && (
+        <p className="apoio espaco">
+          Calculado pela última compra do arquivo e pelo vencimento do cartão (dia {cartao.diaVence}). Se estiver errado, troque aqui.
+        </p>
+      )}
       {erro && <p className="aviso">{erro}</p>}
 
       {lancs && cands.length > 0 && (

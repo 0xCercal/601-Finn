@@ -50,6 +50,23 @@ export const saldoDaCaixinha = (e: Estado, m: Meta) => m.guardado + depositosDaC
 /** Contas que existem no mês: as recorrentes e os lançamentos avulsos daquele mês. */
 export const contasDoMes = (e: Estado, mes: string) => e.contas.filter((c) => !c.mes || c.mes === mes)
 
+/**
+ * Mês da fatura em que cai uma compra feita em `data` ('AAAA-MM-DD').
+ * A fatura fecha cerca de 7 dias antes do vencimento, então a compra vai para o primeiro
+ * vencimento que esteja pelo menos 7 dias depois dela (normalmente o mês seguinte).
+ */
+export function mesDaFatura(data: string, diaVence: number) {
+  const [a, m, d] = data.split('-').map(Number)
+  const limite = new Date(a, m - 1, d + 7)
+  for (let i = 0; i < 2; i++) {
+    const ano = limite.getFullYear()
+    const mes = limite.getMonth() + i
+    const venc = new Date(ano, mes, Math.min(diaVence, new Date(ano, mes + 1, 0).getDate()))
+    if (venc >= limite) return `${venc.getFullYear()}-${String(venc.getMonth() + 1).padStart(2, '0')}`
+  }
+  return `${limite.getFullYear()}-${String(limite.getMonth() + 2).padStart(2, '0')}`
+}
+
 /** Parcela de uma compra que cai na fatura do mês, ou null se não cai nenhuma. */
 export function parcelaNoMes(c: Compra, mes: string) {
   const d = difMeses(c.mes, mes)

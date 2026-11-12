@@ -4,7 +4,7 @@ import {
   salvarGasto, salvarMeta, useEstado,
   type Cartao, type Compra, type Conta, type Forma, type Gasto, type Meta, type Quem,
 } from './store'
-import { depositosDaCaixinha, valorNoMes } from './calc'
+import { depositosDaCaixinha, mesDaFatura, valorNoMes } from './calc'
 import { brl, Campo, lerValor, Modal, nomeDoMes, paraCampo } from './ui'
 
 const diaValido = (txt: string) => Math.min(31, Math.max(1, parseInt(txt) || 1))
@@ -222,7 +222,10 @@ export function CompraForm({ compra, cartaoId, mes, onFechar }: { compra: Compra
   const [descricao, setDescricao] = useState(compra?.descricao ?? '')
   const [valor, setValor] = useState(paraCampo(compra?.valor ?? 0))
   const [parcelas, setParcelas] = useState(String(compra?.parcelas ?? 1))
-  const [primeira, setPrimeira] = useState(compra?.mes ?? mes)
+  const { cartoes } = useEstado()
+  const diaVence = cartoes.find((c) => c.id === (compra?.cartaoId ?? cartaoId))?.diaVence ?? 10
+  // compra feita hoje cai na próxima fatura; vendo outro mês, usa a fatura daquele mês
+  const [primeira, setPrimeira] = useState(compra?.mes ?? (mes === mesAtual() ? mesDaFatura(hojeISO(), diaVence) : mes))
   const n = Math.min(48, Math.max(1, parseInt(parcelas) || 1))
 
   function enviar(ev: FormEvent) {

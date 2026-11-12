@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { faturaDoMes, limiteLivre } from '../calc'
 import { CartaoForm, CompraForm } from '../forms'
 import { ImportarFatura } from '../Importar'
-import { somaMes, useEstado, type Cartao, type Compra } from '../store'
+import { moverImportados, somaMes, useEstado, type Cartao, type Compra } from '../store'
 import { brl, nomeDoMes, Valor } from '../ui'
 
 export function CartaoVisual({ cartao, fatura, livre, mes, onClick }: { cartao: Cartao; fatura: number; livre: number; mes: string; onClick?: () => void }) {
@@ -71,6 +71,11 @@ export function Cartoes({ mes }: { mes: string }) {
                 )}
                 {f.total === 0 && <li className="vazio">Nada lançado nesta fatura.</li>}
               </ul>
+              {f.parcelas.some((p) => p.compra.origem) && (
+                <button className="link pequeno mover" onClick={() => moverImportados(c.id, mes, 1)}>
+                  Importou no mês errado? Mover os importados para {nomeDoMes(somaMes(mes, 1))}
+                </button>
+              )}
               <h4>Próximas faturas</h4>
               <div className="proximas">
                 {[0, 1, 2, 3].map((i) => {
