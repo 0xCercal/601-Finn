@@ -1,10 +1,12 @@
-import { CloudUpload, FileCheck2 } from 'lucide-react'
+import { CloudUpload, FileCheck2, FileX2 } from 'lucide-react'
 import { useState } from 'react'
 import { mesDaFatura } from './calc'
 import { categoriaDe, NOMES_CATEGORIA } from './categorias'
 import { lerArquivoFatura, paraCompras, type Lancamento } from './leitorFatura'
 import { importarCompras, novoId, useEstado, type Cartao } from './store'
 import { brl, Campo, Modal, nomeDoMes } from './ui'
+
+const TAMANHO_MAXIMO = 2 * 1024 * 1024
 
 const AVISOS = {
   importado: 'já importado antes',
@@ -42,6 +44,14 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
       setErro('PDF ainda não é lido. Exporte a fatura em CSV ou OFX e escolha esse arquivo.')
       return
     }
+    if (!/\.(csv|ofx|txt)$/i.test(f.name)) {
+      setErro('Esse tipo de arquivo não é aceito. Use o CSV ou o OFX exportado pelo banco.')
+      return
+    }
+    if (f.size > TAMANHO_MAXIMO) {
+      setErro('Arquivo grande demais (máx. 2 MB). Uma fatura costuma ter poucos KB; confira se é o arquivo certo.')
+      return
+    }
     try {
       const l = lerArquivoFatura(f.name, await f.text())
       if (!l.length) throw new Error('Não encontrei lançamentos nesse arquivo.')
@@ -69,7 +79,7 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
   return (
     <Modal titulo={'Importar fatura · ' + cartao.nome} onFechar={onFechar}>
       <label
-        className={'soltar' + (sobre ? ' sobre' : '') + (lancs ? ' pronto' : '')}
+        className={'soltar' + (sobre ? ' sobre' : '') + (lancs ? ' pronto' : '') + (erro ? ' recusado' : '')}
         onDragOver={(ev) => { ev.preventDefault(); setSobre(true) }}
         onDragLeave={() => setSobre(false)}
         onDrop={(ev) => { ev.preventDefault(); setSobre(false); void abrir(ev.dataTransfer.files?.[0]) }}
@@ -79,13 +89,15 @@ export function ImportarFatura({ cartao, mes, onFechar }: { cartao: Cartao; mes:
           accept=".csv,.ofx,.txt,.pdf"
           onChange={(ev) => { void abrir(ev.target.files?.[0]); ev.target.value = '' }}
         />
-        <span className="soltar-icone">{lancs ? <FileCheck2 size={20} /> : <CloudUpload size={20} />}</span>
+        <span className="soltar-icone">{lancs ? <FileCheck2 size={20} /> : erro ? <FileX2 size={20} /> : <CloudUpload size={20} />}</span>
         {lancs ? (
           <span className="soltar-texto"><strong>{arquivo}</strong> · <u>trocar arquivo</u></span>
         ) : (
           <span className="soltar-texto">Arraste e solte a fatura aqui ou <u>selecionar</u></span>
         )}
-        <small>CSV ou OFX exportado pelo banco</small>
+        <small role="status">
+          {lancs ? `Fatura lida: ${lancs.length} ${lancs.length === 1 ? 'lançamento' : 'lançamentos'}` : erro ? `${arquivo} não foi aceito` : 'CSV ou OFX (máx. 2 MB)'}
+        </small>
       </label>
       <Campo rotulo="Fatura de">
         <input type="month" value={faturaMes} onChange={(ev) => { setFaturaMes(ev.target.value); setSugerido(false) }} />
