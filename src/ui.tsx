@@ -4,7 +4,7 @@ import { useEffect, type ReactNode } from 'react'
 export const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
 /** Ilustração 3D decorativa no canto de um cartão (arquivos em public/icones). */
-export function Ilustracao({ nome }: { nome: 'saldo' | 'calendario' | 'divisao' | 'cartoes' | 'calculadora' }) {
+export function Ilustracao({ nome }: { nome: 'saldo' | 'calendario' | 'divisao' | 'cartoes' | 'casa' }) {
   return <img className="ilustracao" src={import.meta.env.BASE_URL + 'icones/' + nome + '.webp'} alt="" draggable={false} />
 }
 

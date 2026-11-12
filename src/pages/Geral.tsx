@@ -243,7 +243,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
       </section>
 
       <section className="cartao a-moradia">
-        <Ilustracao nome="calculadora" />
+        <Ilustracao nome="casa" />
         <h3>Moradia</h3>
         <p className="apoio">Quanto você gasta pra morar</p>
         <Valor v={r.moradia} className="grande" />
