@@ -1,5 +1,5 @@
 import {
-  Car, Ellipsis, GraduationCap, HeartPulse, House, Plane, Repeat, ShoppingBag, ShoppingCart, Ticket, UtensilsCrossed, type LucideIcon,
+  Car, ChevronDown, Ellipsis, GraduationCap, HeartPulse, House, Plane, Repeat, ShoppingBag, ShoppingCart, Ticket, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
 import { gastosPorCategoria } from './calc'
@@ -96,11 +96,12 @@ export function ParaOndeFoi({ mes }: { mes: string }) {
           const Icone = ICONES_CATEGORIA[g.categoria]
           return (
             <li key={g.categoria}>
-              <details>
+              <details name="categorias">
                 <summary>
                   <span className="cat-icone"><Icone size={15} /></span>
                   <span className="cat-nome">{NOMES_CATEGORIA[g.categoria]}</span>
                   <span className="cat-valor">{brl(g.total)} <small>{pct(g.total, r.total)}%</small></span>
+                  <ChevronDown className="seta" size={16} aria-hidden />
                   <span className="cat-barra"><i style={{ width: (g.total / maior) * 100 + '%' }} /></span>
                 </summary>
                 <ul className="lista simples">
