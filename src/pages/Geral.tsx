@@ -184,159 +184,167 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
 
   return (
     <div className="grade">
-      <section className="cartao a-saldo">
-        <Ilustracao nome="saldo" />
-        <h3>Saldo previsto</h3>
-        <div className="saldo-linha">
-          <Valor v={r.sobra} className={'enorme' + (r.sobra < 0 ? ' negativo' : '')} />
-          <p className={r.sobra < 0 ? 'negativo' : 'positivo'}>
-            {r.sobra < 0 ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}
-            <strong>{pct(r.sobra, r.salario)}% do salário livre</strong>
-            <small>valor estimado após pagar todas as contas</small>
-          </p>
-        </div>
-        <p className={'gastar' + (r.disponivel < 0 ? ' negativo' : '')}>
-          {r.disponivel < 0 ? (
-            <>As contas e os gastos passam do salário em <strong>{brl(-r.disponivel)}</strong>.</>
-          ) : (
-            <>
-              Livre depois das contas{r.totalGastos > 0 && ' e dos gastos'}: <strong>{brl(r.disponivel)}</strong>
-              {dias > 0 && <> · dá <strong>{brl(r.disponivel / dias)} por dia</strong> nos {dias} dias que restam</>}
-            </>
-          )}
-        </p>
-        <div className="barra">
-          {fatias.map((f) => f.v > 0 && <i key={f.rotulo} style={{ width: (f.v / base) * 100 + '%', background: f.cor }} />)}
-        </div>
-        <div className="legenda">
-          <div>
-            <span>Salário</span>
-            <strong>{brl(r.salario)}</strong>
-          </div>
-          {fatias.map((f) => (
-            <div key={f.rotulo}>
-              <span><i style={{ background: f.cor }} /> {f.rotulo}</span>
-              <strong className={f.rotulo === 'Sobra' ? (r.sobra < 0 ? 'negativo' : 'positivo') : ''}>
-                {f.rotulo === 'Sobra' ? brl(r.sobra) : '− ' + brl(f.v)} <small>{pct(f.rotulo === 'Sobra' ? r.sobra : f.v, r.salario)}%</small>
-              </strong>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      <GastosDoDia mes={mes} r={r} dias={dias} />
-      <ParaOndeFoi mes={mes} />
-      <ContasAPagar mes={mes} itens={r.itens} />
-
-      <section className="cartao a-divisao">
-        <Ilustracao nome="divisao" />
-        <h3>Divisão da casa</h3>
-        <p className="apoio">Total das contas</p>
-        <Valor v={r.totalCasa} className="grande" />
-        <div className="duelo">
-          <div><span><i className={'ponto ' + cor(r.eu)} /> Você paga</span><strong>{brl(r.pagoEu)}</strong></div>
-          <div className="dir"><span>{r.nomeOutro} paga <i className={'ponto ' + cor(r.outro)} /></span><strong>{brl(r.pagoPar)}</strong></div>
-        </div>
-        <div className="barra dupla">
-          <i style={{ width: pctEu + '%', background: `var(--${cor(r.eu)})` }}>{r.totalCasa > 0 && pctEu + '%'}</i>
-          <i style={{ width: 100 - pctEu + '%', background: `var(--${cor(r.outro)})` }}>{r.totalCasa > 0 && 100 - pctEu + '%'}</i>
-          <b style={{ left: pct(r.parteCasa, r.totalCasa) + '%' }} />
-        </div>
-        <p className="apoio">Sua parte: <strong>{brl(r.parteCasa)}</strong> (o traço na barra)</p>
-        <h4>Quem paga cada conta</h4>
-        <ul className="lista simples">
-          {r.casa.map((c) => (
-            <li key={c.id}>
-              <i className={'ponto ' + cor(pagadorDe(c))} />
-              <span className="nome">{c.nome}{c.divisao && c.divisao !== 'meio' && <small>só {nomeDe(c.divisao)}</small>}</span>
-              <strong>{c.estimado && '≈ '}{brl(c.valor)}</strong>
-            </li>
-          ))}
-          {r.casa.length === 0 && <li className="vazio">Nenhuma conta da casa ainda.</li>}
-        </ul>
-
-        {(temAcerto || feito) && (
-          <div className="acerto">
-            <p>
-              {temAcerto ? (
-                <>
-                  {r.acerto > 0 ? r.nomeOutro + ' te devolve' : 'Você devolve'} <strong>{brl(Math.abs(r.acerto))}</strong>
-                  {r.acerto < 0 && ' para ' + r.nomeOutro}
-                </>
-              ) : (
-                'As contas estão divididas igualmente.'
-              )}
-              {feito && (
-                <small className="positivo">
-                  <Ok size={13} /> Acertado em {dataCurta(feito.em)}
-                  {temAcerto && Math.abs(feito.valor - Math.abs(r.acerto)) >= 0.01 && ` (${brl(feito.valor)}; o valor mudou depois)`}
-                </small>
-              )}
+      <div className="col-esq">
+        <section className="cartao a-saldo">
+          <Ilustracao nome="saldo" />
+          <h3>Saldo previsto</h3>
+          <div className="saldo-linha">
+            <Valor v={r.sobra} className={'enorme' + (r.sobra < 0 ? ' negativo' : '')} />
+            <p className={r.sobra < 0 ? 'negativo' : 'positivo'}>
+              {r.sobra < 0 ? <ArrowDownRight size={16} /> : <ArrowUpRight size={16} />}
+              <strong>{pct(r.sobra, r.salario)}% do salário livre</strong>
+              <small>valor estimado após pagar todas as contas</small>
             </p>
-            {feito ? (
-              <button className="botao leve" onClick={() => marcarAcerto(mes, null)}>Desfazer</button>
-            ) : (
-              <button
-                className="botao leve"
-                onClick={() =>
-                  marcarAcerto(mes, {
-                    valor: Math.round(Math.abs(r.acerto) * 100) / 100,
-                    de: r.acerto > 0 ? r.outro : r.eu,
-                    para: r.acerto > 0 ? r.eu : r.outro,
-                    em: new Date().toISOString().slice(0, 10),
-                  })
-                }
-              >
-                Marcar feito
-              </button>
-            )}
           </div>
-        )}
-        {historico.length > 0 && (
-          <details className="historico">
-            <summary>Histórico de acertos</summary>
+          <p className={'gastar' + (r.disponivel < 0 ? ' negativo' : '')}>
+            {r.disponivel < 0 ? (
+              <>As contas e os gastos passam do salário em <strong>{brl(-r.disponivel)}</strong>.</>
+            ) : (
+              <>
+                Livre depois das contas{r.totalGastos > 0 && ' e dos gastos'}: <strong>{brl(r.disponivel)}</strong>
+                {dias > 0 && <> · dá <strong>{brl(r.disponivel / dias)} por dia</strong> nos {dias} dias que restam</>}
+              </>
+            )}
+          </p>
+          <div className="barra">
+            {fatias.map((f) => f.v > 0 && <i key={f.rotulo} style={{ width: (f.v / base) * 100 + '%', background: f.cor }} />)}
+          </div>
+          <div className="legenda">
+            <div>
+              <span>Salário</span>
+              <strong>{brl(r.salario)}</strong>
+            </div>
+            {fatias.map((f) => (
+              <div key={f.rotulo}>
+                <span><i style={{ background: f.cor }} /> {f.rotulo}</span>
+                <strong className={f.rotulo === 'Sobra' ? (r.sobra < 0 ? 'negativo' : 'positivo') : ''}>
+                  {f.rotulo === 'Sobra' ? brl(r.sobra) : '− ' + brl(f.v)} <small>{pct(f.rotulo === 'Sobra' ? r.sobra : f.v, r.salario)}%</small>
+                </strong>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <GastosDoDia mes={mes} r={r} dias={dias} />
+
+        <div className="par">
+          <section className="cartao a-divisao">
+            <Ilustracao nome="divisao" />
+            <h3>Divisão da casa</h3>
+            <p className="apoio">Total das contas</p>
+            <Valor v={r.totalCasa} className="grande" />
+            <div className="duelo">
+              <div><span><i className={'ponto ' + cor(r.eu)} /> Você paga</span><strong>{brl(r.pagoEu)}</strong></div>
+              <div className="dir"><span>{r.nomeOutro} paga <i className={'ponto ' + cor(r.outro)} /></span><strong>{brl(r.pagoPar)}</strong></div>
+            </div>
+            <div className="barra dupla">
+              <i style={{ width: pctEu + '%', background: `var(--${cor(r.eu)})` }}>{r.totalCasa > 0 && pctEu + '%'}</i>
+              <i style={{ width: 100 - pctEu + '%', background: `var(--${cor(r.outro)})` }}>{r.totalCasa > 0 && 100 - pctEu + '%'}</i>
+              <b style={{ left: pct(r.parteCasa, r.totalCasa) + '%' }} />
+            </div>
+            <p className="apoio">Sua parte: <strong>{brl(r.parteCasa)}</strong> (o traço na barra)</p>
+            <h4>Quem paga cada conta</h4>
             <ul className="lista simples">
-              {historico.map(([m, a]) => (
-                <li key={m}>
-                  <span className="nome">
-                    {nomeDoMes(m)} de {m.slice(0, 4)}
-                    <small>{nomeDe(a.de)} → {nomeDe(a.para)} · em {dataCurta(a.em)}</small>
-                  </span>
-                  <strong>{brl(a.valor)}</strong>
+              {r.casa.map((c) => (
+                <li key={c.id}>
+                  <i className={'ponto ' + cor(pagadorDe(c))} />
+                  <span className="nome">{c.nome}{c.divisao && c.divisao !== 'meio' && <small>só {nomeDe(c.divisao)}</small>}</span>
+                  <strong>{c.estimado && '≈ '}{brl(c.valor)}</strong>
                 </li>
               ))}
+              {r.casa.length === 0 && <li className="vazio">Nenhuma conta da casa ainda.</li>}
             </ul>
-          </details>
-        )}
-      </section>
 
-      <section className="cartao a-cartoes">
-        <Ilustracao nome="cartoes" />
-        <h3>Cartões</h3>
-        <p className="apoio">Suas faturas do mês</p>
-        <Valor v={r.totalFaturas} className="grande" />
-        <div className="carrossel">
-          {r.faturas.map((f) => (
-            <CartaoVisual key={f.cartao.id} cartao={f.cartao} fatura={f.valor} livre={limiteLivre(e, f.cartao, mes)} mes={mes} />
-          ))}
-        </div>
-        <button className="botao leve" onClick={() => ir('cartoes')}>Ver cartões</button>
-      </section>
+            {(temAcerto || feito) && (
+              <div className="acerto">
+                <p>
+                  {temAcerto ? (
+                    <>
+                      {r.acerto > 0 ? r.nomeOutro + ' te devolve' : 'Você devolve'} <strong>{brl(Math.abs(r.acerto))}</strong>
+                      {r.acerto < 0 && ' para ' + r.nomeOutro}
+                    </>
+                  ) : (
+                    'As contas estão divididas igualmente.'
+                  )}
+                  {feito && (
+                    <small className="positivo">
+                      <Ok size={13} /> Acertado em {dataCurta(feito.em)}
+                      {temAcerto && Math.abs(feito.valor - Math.abs(r.acerto)) >= 0.01 && ` (${brl(feito.valor)}; o valor mudou depois)`}
+                    </small>
+                  )}
+                </p>
+                {feito ? (
+                  <button className="botao leve" onClick={() => marcarAcerto(mes, null)}>Desfazer</button>
+                ) : (
+                  <button
+                    className="botao leve"
+                    onClick={() =>
+                      marcarAcerto(mes, {
+                        valor: Math.round(Math.abs(r.acerto) * 100) / 100,
+                        de: r.acerto > 0 ? r.outro : r.eu,
+                        para: r.acerto > 0 ? r.eu : r.outro,
+                        em: new Date().toISOString().slice(0, 10),
+                      })
+                    }
+                  >
+                    Marcar feito
+                  </button>
+                )}
+              </div>
+            )}
+            {historico.length > 0 && (
+              <details className="historico">
+                <summary>Histórico de acertos</summary>
+                <ul className="lista simples">
+                  {historico.map(([m, a]) => (
+                    <li key={m}>
+                      <span className="nome">
+                        {nomeDoMes(m)} de {m.slice(0, 4)}
+                        <small>{nomeDe(a.de)} → {nomeDe(a.para)} · em {dataCurta(a.em)}</small>
+                      </span>
+                      <strong>{brl(a.valor)}</strong>
+                    </li>
+                  ))}
+                </ul>
+              </details>
+            )}
+          </section>
 
-      <section className="cartao a-moradia">
-        <Ilustracao nome="casa" />
-        <h3>Moradia</h3>
-        <p className="apoio">Quanto você gasta pra morar</p>
-        <Valor v={r.moradia} className="grande" />
-        <p className={pctMoradia <= 30 ? 'positivo linha' : 'negativo linha'}>
-          {pctMoradia <= 30 && <Ok size={16} />} <strong>{pctMoradia}% do salário</strong> <small>referência: até 30%</small>
-        </p>
-        <div className="barra medidor">
-          <i style={{ width: Math.min(pctMoradia / 60, 1) * 100 + '%', background: pctMoradia <= 30 ? 'var(--verde)' : 'var(--rosa)' }} />
-          <b />
+          <section className="cartao a-cartoes">
+            <Ilustracao nome="cartoes" />
+            <h3>Cartões</h3>
+            <p className="apoio">Suas faturas do mês</p>
+            <Valor v={r.totalFaturas} className="grande" />
+            <div className="carrossel">
+              {r.faturas.map((f) => (
+                <CartaoVisual key={f.cartao.id} cartao={f.cartao} fatura={f.valor} livre={limiteLivre(e, f.cartao, mes)} mes={mes} />
+              ))}
+            </div>
+            <button className="botao leve" onClick={() => ir('cartoes')}>Ver cartões</button>
+          </section>
         </div>
-        <div className="escala"><small>0%</small><small>30%</small><small>60%</small></div>
-      </section>
+      </div>
+
+      <div className="col-dir">
+        <ContasAPagar mes={mes} itens={r.itens} />
+
+        <section className="cartao a-moradia">
+          <Ilustracao nome="casa" />
+          <h3>Moradia</h3>
+          <p className="apoio">Quanto você gasta pra morar</p>
+          <Valor v={r.moradia} className="grande" />
+          <p className={pctMoradia <= 30 ? 'positivo linha' : 'negativo linha'}>
+            {pctMoradia <= 30 && <Ok size={16} />} <strong>{pctMoradia}% do salário</strong> <small>referência: até 30%</small>
+          </p>
+          <div className="barra medidor">
+            <i style={{ width: Math.min(pctMoradia / 60, 1) * 100 + '%', background: pctMoradia <= 30 ? 'var(--verde)' : 'var(--rosa)' }} />
+            <b />
+          </div>
+          <div className="escala"><small>0%</small><small>30%</small><small>60%</small></div>
+        </section>
+
+        <ParaOndeFoi mes={mes} />
+      </div>
     </div>
   )
 }
