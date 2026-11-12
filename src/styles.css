@@ -104,12 +104,13 @@ h3 { font-size: 14px; font-weight: 600; margin-bottom: 12px; }
 h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 
 /* ---------- visão geral ---------- */
-.grade { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: 'saldo saldo pagar' 'divisao cartoes pagar' 'divisao cartoes moradia'; align-items: start; }
+.grade { display: grid; gap: 16px; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-areas: 'saldo saldo pagar' 'gastos gastos pagar' 'divisao cartoes moradia'; align-items: start; }
 .a-saldo { grid-area: saldo; }
 .a-pagar { grid-area: pagar; }
 .a-divisao { grid-area: divisao; }
 .a-cartoes { grid-area: cartoes; min-width: 0; }
 .a-moradia { grid-area: moradia; }
+.a-gastos { grid-area: gastos; }
 
 .saldo-linha { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
 .saldo-linha p { display: grid; grid-template-columns: auto 1fr; column-gap: 6px; align-items: center; border-left: 1px solid var(--linha); padding-left: 18px; }
@@ -246,6 +247,13 @@ h4 { font-size: 12px; font-weight: 600; margin: 18px 0 4px; }
 .a-saldo .ilustracao { width: 104px; height: 104px; }
 .gastar { display: flow-root; }
 
+/* ---------- gastos do dia a dia ---------- */
+.a-gastos .cabeca { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.a-gastos .cabeca .botao { flex: none; }
+.a-gastos .barra.medidor { margin: 14px 0 8px; }
+.a-gastos details summary { cursor: pointer; color: var(--suave); font-size: 13px; font-weight: 500; padding: 10px 0 2px; }
+.forma { display: inline-block; font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 99px; background: var(--campo); color: var(--suave); }
+
 /* ---------- faixa de dias (contas a pagar) ---------- */
 .a-pagar h3 small { font-size: 12px; }
 .dias { display: flex; gap: 8px; overflow-x: auto; margin: 14px 0 4px; padding: 2px 2px 4px; scrollbar-width: thin; }
@@ -286,7 +294,7 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
 /* ---------- telas menores ---------- */
 @media (max-width: 1150px) {
-  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: 'saldo saldo' 'pagar divisao' 'cartoes moradia'; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: 'saldo saldo' 'gastos pagar' 'divisao cartoes' 'moradia moradia'; }
   .legenda { grid-template-columns: repeat(3, auto); }
 }
 
@@ -294,7 +302,7 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
   .app { grid-template-columns: 1fr; padding: 12px 12px 96px; }
   .lateral, .so-desktop { display: none; }
   .ilustracao, .a-saldo .ilustracao { width: 64px; height: 64px; margin: -6px -4px 4px 8px; }
-  .grade { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'saldo' 'pagar' 'divisao' 'cartoes' 'moradia'; }
+  .grade { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'saldo' 'gastos' 'pagar' 'divisao' 'cartoes' 'moradia'; }
   .topo h1 { font-size: 20px; }
   .valor.enorme { font-size: 40px; }
   .saldo-linha p { border: 0; padding: 0; }
@@ -312,3 +320,5 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
   .modal-fundo { place-items: end center; padding: 0; }
   .modal { border-radius: 18px 18px 0 0; max-width: none; }
 }
+
+.valor-grande { font-size: 24px !important; font-weight: 700; letter-spacing: -0.02em; }

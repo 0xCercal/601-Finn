@@ -123,7 +123,13 @@ export function resumo(e: Estado, mes: string, extra = 0) {
   const pessoais = soma(pess) + totalFaturas + extra
   /** o que sobra do salário depois de todas as contas, antes da reserva do dia a dia */
   const livre = v.salario - parteCasa - pessoais
-  const sobra = livre - v.diaADia
+  const gastos = e.gastos.filter((g) => g.dono === v.eu && g.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data))
+  const totalGastos = soma(gastos)
+  /** a reserva do dia a dia é consumida pelos gastos lançados; o que passar dela sai da sobra */
+  const diaADiaUsado = Math.max(v.diaADia, totalGastos)
+  const sobra = livre - diaADiaUsado
+  /** o que ainda está livre agora: salário − contas − gastos já feitos */
+  const disponivel = livre - totalGastos
 
   const pagos = e.pagos[mes] ?? []
   const itens: ItemAPagar[] = [
@@ -143,6 +149,7 @@ export function resumo(e: Estado, mes: string, extra = 0) {
     ...v,
     casa, totalCasa, parteCasa, pagoEu, pagoPar, acerto,
     faturas, totalFaturas, pessoais, livre, sobra,
+    gastos, totalGastos, diaADiaUsado, disponivel,
     itens, pendente: soma(itens.filter((i) => !i.pago)),
     moradia,
   }

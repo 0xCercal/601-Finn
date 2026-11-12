@@ -1,7 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import {
-  excluirCartao, excluirCompra, excluirConta, excluirMeta, novoId, salvarCartao, salvarCompra, salvarConta, salvarMeta, useEstado,
-  type Cartao, type Compra, type Conta, type Meta, type Quem,
+  excluirCartao, excluirCompra, excluirConta, excluirGasto, excluirMeta, hojeISO, mesAtual, novoId, salvarCartao, salvarCompra, salvarConta,
+  salvarGasto, salvarMeta, useEstado,
+  type Cartao, type Compra, type Conta, type Forma, type Gasto, type Meta, type Quem,
 } from './store'
 import { valorNoMes } from './calc'
 import { brl, Campo, lerValor, Modal, nomeDoMes, paraCampo } from './ui'
@@ -312,6 +313,70 @@ export function MetaForm({ meta, onFechar }: { meta: Meta | null; onFechar: () =
         <footer>
           {meta && (
             <button type="button" className="botao perigo" onClick={() => { excluirMeta(meta.id); onFechar() }}>Excluir</button>
+          )}
+          <button type="submit" className="botao primario">Salvar</button>
+        </footer>
+      </form>
+    </Modal>
+  )
+}
+
+export const FORMAS: Record<Forma, string> = { pix: 'Pix', debito: 'Débito', dinheiro: 'Dinheiro' }
+
+/** Lançamento rápido de um gasto do dia a dia: valor, forma e, se quiser, uma descrição. */
+export function GastoForm({ gasto, mes, onFechar }: { gasto: Gasto | null; mes: string; onFechar: () => void }) {
+  const { perfil } = useEstado()
+  const [valor, setValor] = useState(paraCampo(gasto?.valor ?? 0))
+  const [descricao, setDescricao] = useState(gasto?.descricao ?? '')
+  const [forma, setForma] = useState<Forma>(gasto?.forma ?? 'pix')
+  // no mês atual, hoje; em outro mês, o dia 1 daquele mês
+  const [data, setData] = useState(gasto?.data ?? (mes === mesAtual() ? hojeISO() : mes + '-01'))
+  const [erro, setErro] = useState(false)
+
+  function enviar(ev: FormEvent) {
+    ev.preventDefault()
+    const v = lerValor(valor)
+    if (v <= 0 || !data) {
+      setErro(true)
+      return
+    }
+    salvarGasto({ id: gasto?.id ?? novoId(), descricao: descricao.trim(), valor: v, data, forma, dono: gasto?.dono ?? perfil })
+    onFechar()
+  }
+
+  return (
+    <Modal titulo={gasto ? 'Editar gasto' : 'Lançar gasto'} onFechar={onFechar}>
+      <form onSubmit={enviar}>
+        <Campo rotulo="Valor (R$)">
+          <input
+            className="valor-grande"
+            value={valor}
+            onChange={(ev) => { setValor(ev.target.value); setErro(false) }}
+            inputMode="decimal"
+            placeholder="0,00"
+            autoFocus
+          />
+        </Campo>
+        {erro && <p className="aviso espaco">Digite um valor maior que zero.</p>}
+        <Campo rotulo="Como pagou">
+          <div className="abas">
+            {(Object.keys(FORMAS) as Forma[]).map((f) => (
+              <button type="button" key={f} className={forma === f ? 'ativo' : ''} onClick={() => setForma(f)}>{FORMAS[f]}</button>
+            ))}
+          </div>
+        </Campo>
+        <div className="duas">
+          <Campo rotulo="Descrição (opcional)">
+            <input value={descricao} onChange={(ev) => setDescricao(ev.target.value)} placeholder="Ex.: Padaria" />
+          </Campo>
+          <Campo rotulo="Data">
+            <input type="date" value={data} onChange={(ev) => setData(ev.target.value)} />
+          </Campo>
+        </div>
+        <p className="apoio espaco">Só você vê. Desconta da sua reserva do dia a dia.</p>
+        <footer>
+          {gasto && (
+            <button type="button" className="botao perigo" onClick={() => { excluirGasto(gasto.id); onFechar() }}>Excluir</button>
           )}
           <button type="submit" className="botao primario">Salvar</button>
         </footer>

@@ -1,6 +1,6 @@
 import { ArrowLeftRight, Building2, ChevronLeft, ChevronRight, CreditCard, LayoutGrid, Moon, Plus, Settings, Sun, Target, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
-import { ContaForm } from './forms'
+import { ContaForm, GastoForm } from './forms'
 import { Ajustes } from './pages/Ajustes'
 import { Cartoes } from './pages/Cartoes'
 import { Contas } from './pages/Contas'
@@ -10,7 +10,7 @@ import { Geral } from './pages/Geral'
 import { visao } from './calc'
 import { Entrada } from './Entrada'
 import { useNuvem } from './nuvem'
-import { alterar, mesAtual, somaMes, trocarPerfil, useEstado, type Conta } from './store'
+import { alterar, mesAtual, somaMes, trocarPerfil, useEstado, type Conta, type Gasto } from './store'
 import { cor } from './ui'
 
 export type Pagina = 'geral' | 'fluxo' | 'contas' | 'cartoes' | 'metas' | 'ajustes'
@@ -30,6 +30,7 @@ export default function App() {
   const [pagina, setPagina] = useState<Pagina>('geral')
   const [mes, setMes] = useState(mesAtual())
   const [conta, setConta] = useState<Conta | 'nova' | null>(null)
+  const [gasto, setGasto] = useState<Gasto | 'novo' | null>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = e.tema
@@ -79,7 +80,8 @@ export default function App() {
             {nomeMes[0].toUpperCase() + nomeMes.slice(1)} <span>{ano}</span>
           </h1>
           {mes !== mesAtual() && <button className="botao leve" onClick={() => setMes(mesAtual())}>Hoje</button>}
-          <button className="botao primario so-desktop" onClick={() => setConta('nova')}><Plus size={16} /> Adicionar</button>
+          <button className="botao leve so-desktop" onClick={() => setConta('nova')}>Nova conta</button>
+          <button className="botao primario so-desktop" onClick={() => setGasto('novo')}><Plus size={16} /> Gasto</button>
         </header>
 
         {nuvem.erro && <p className="aviso">{nuvem.erro}</p>}
@@ -99,8 +101,9 @@ export default function App() {
           </button>
         ))}
       </nav>
-      <button className="fab" onClick={() => setConta('nova')} aria-label="Adicionar conta"><Plus size={24} /></button>
+      <button className="fab" onClick={() => setGasto('novo')} aria-label="Lançar gasto"><Plus size={24} /></button>
 
+      {gasto && <GastoForm gasto={gasto === 'novo' ? null : gasto} mes={mes} onFechar={() => setGasto(null)} />}
       {conta && <ContaForm conta={conta === 'nova' ? null : conta} mes={mes} onFechar={() => setConta(null)} />}
     </div>
   )

@@ -62,6 +62,19 @@ export interface Meta {
   dono: Quem | 'casa'
 }
 
+export type Forma = 'pix' | 'debito' | 'dinheiro'
+
+/** Gasto do dia a dia (Pix, débito, dinheiro). É pessoal: só o dono vê. */
+export interface Gasto {
+  id: string
+  descricao: string
+  valor: number
+  /** 'AAAA-MM-DD' */
+  data: string
+  forma: Forma
+  dono: Quem
+}
+
 /** Registro de que o acerto da divisão da casa de um mês foi feito. */
 export interface Acerto {
   valor: number
@@ -84,6 +97,7 @@ export interface Estado {
   cartoes: Cartao[]
   compras: Compra[]
   metas: Meta[]
+  gastos: Gasto[]
   /** ids pagos por mês ('AAAA-MM') */
   pagos: Record<string, string[]>
   /** acerto da casa por mês ('AAAA-MM') */
@@ -98,6 +112,9 @@ export const novoId = () => crypto.randomUUID()
 const formatar = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
 
 export const mesAtual = () => formatar(new Date())
+
+/** Data de hoje no fuso local, 'AAAA-MM-DD'. */
+export const hojeISO = () => formatar(new Date()) + '-' + String(new Date().getDate()).padStart(2, '0')
 
 export function somaMes(mes: string, n: number) {
   const [a, m] = mes.split('-').map(Number)
@@ -149,6 +166,11 @@ function exemplo(): Estado {
       { id: novoId(), nome: 'Viagem de férias', alvo: 8000, guardado: 2500, aporte: 500, dono: 'casa' },
       { id: novoId(), nome: 'Reserva de emergência', alvo: 20000, guardado: 6000, aporte: 1000, dono: 'eu' },
     ],
+    gastos: [
+      { id: novoId(), descricao: 'Padaria', valor: 23.5, data: m + '-02', forma: 'pix', dono: 'eu' },
+      { id: novoId(), descricao: 'Farmácia', valor: 48.9, data: m + '-05', forma: 'debito', dono: 'eu' },
+      { id: novoId(), descricao: 'Feira', valor: 62, data: m + '-08', forma: 'dinheiro', dono: 'eu' },
+    ],
     pagos: {},
     acertos: {},
     tema: 'claro',
@@ -167,6 +189,7 @@ function carregar(): Estado {
         compras: salvo.compras ?? [],
         metas: salvo.metas ?? [],
         acertos: salvo.acertos ?? {},
+        gastos: salvo.gastos ?? [],
       }
       e.cartoes = e.cartoes.map((c) => ({ ...c, dono: c.dono ?? 'eu' }))
       if (e.nomeEu === 'Você') e.nomeEu = 'Pessoa 1'
@@ -259,6 +282,9 @@ export const excluirCompra = (id: string) => alterar((e) => ({ ...e, compras: e.
 export const salvarMeta = (m: Meta) => alterar((e) => ({ ...e, metas: gravar(e.metas, m) }))
 export const excluirMeta = (id: string) => alterar((e) => ({ ...e, metas: e.metas.filter((m) => m.id !== id) }))
 
+export const salvarGasto = (g: Gasto) => alterar((e) => ({ ...e, gastos: gravar(e.gastos, g) }))
+export const excluirGasto = (id: string) => alterar((e) => ({ ...e, gastos: e.gastos.filter((g) => g.id !== id) }))
+
 export function alternarPago(mes: string, id: string) {
   alterar((e) => {
     const atual = e.pagos[mes] ?? []
@@ -282,5 +308,5 @@ export function trocarPerfil(perfil?: Quem) {
 }
 
 export function zerarTudo() {
-  alterar((e) => ({ ...e, contas: [], cartoes: [], compras: [], metas: [], pagos: {}, acertos: {} }))
+  alterar((e) => ({ ...e, contas: [], cartoes: [], compras: [], metas: [], gastos: [], pagos: {}, acertos: {} }))
 }
