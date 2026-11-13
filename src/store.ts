@@ -22,6 +22,8 @@ export interface Conta {
   ajustes?: Record<string, number>
   /** conta da casa: 'meio' divide igual; 'eu'/'par' fica inteira com essa pessoa. Sem isso, meio a meio. */
   divisao?: 'meio' | Quem
+  /** conta meio a meio paga por conta conjunta: cada um paga a própria metade, sem acerto entre os dois */
+  conjunta?: boolean
   /** o valor muda todo mês (luz, gás): o padrão é só estimativa até informar o valor do mês */
   variavel?: boolean
 }

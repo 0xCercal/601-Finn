@@ -20,6 +20,7 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
   const [tipo, setTipo] = useState<Conta['tipo']>(conta?.tipo ?? 'casa')
   const [divisao, setDivisao] = useState<'meio' | Quem>(conta?.divisao ?? 'meio')
   const [pagador, setPagador] = useState<Conta['pagador']>(conta?.pagador ?? 'eu')
+  const [conjunta, setConjunta] = useState(conta?.conjunta ?? false)
   const [moradia, setMoradia] = useState(conta?.moradia ?? false)
   const esteMes = nomeDoMes(mes)
   const nomeDe = (q: Quem) => (q === 'eu' ? e.nomeEu : e.nomePar)
@@ -41,6 +42,7 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
       pagador: daCasa ? (divisao === 'meio' ? pagador : divisao) : conta?.tipo === 'pessoal' ? conta.pagador : e.perfil,
       moradia,
       ...(daCasa && divisao !== 'meio' ? { divisao } : {}),
+      ...(daCasa && divisao === 'meio' && conjunta ? { conjunta: true } : {}),
       // lançamento avulso guarda o mês em que existe; conta recorrente guarda os valores por mês
       ...(avulsa
         ? { mes: conta?.mes ?? mes }
@@ -105,10 +107,18 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
         {tipo === 'casa' && divisao === 'meio' && (
           <Campo rotulo="Quem paga o boleto">
             <div className="abas">
-              <button type="button" className={pagador === 'eu' ? 'ativo' : ''} onClick={() => setPagador('eu')}>{e.nomeEu}</button>
-              <button type="button" className={pagador === 'par' ? 'ativo' : ''} onClick={() => setPagador('par')}>{e.nomePar}</button>
+              <button type="button" className={!conjunta && pagador === 'eu' ? 'ativo' : ''} onClick={() => { setPagador('eu'); setConjunta(false) }}>{e.nomeEu}</button>
+              <button type="button" className={!conjunta && pagador === 'par' ? 'ativo' : ''} onClick={() => { setPagador('par'); setConjunta(false) }}>{e.nomePar}</button>
+              <button type="button" className={conjunta ? 'ativo' : ''} onClick={() => setConjunta(true)}>Cada um a sua parte</button>
             </div>
           </Campo>
+        )}
+        {tipo === 'casa' && divisao === 'meio' && (
+          <p className="apoio espaco">
+            {conjunta
+              ? 'Cada um paga a própria metade (ex.: conta conjunta). Não gera acerto entre vocês.'
+              : `${nomeDe(pagador)} paga o boleto inteiro e a outra pessoa devolve a metade no acerto.`}
+          </p>
         )}
         {tipo === 'casa' && divisao !== 'meio' && (
           <p className="apoio espaco">Entra inteira nas contas de {nomeDe(divisao)}, sem acerto. Os dois continuam vendo a conta.</p>

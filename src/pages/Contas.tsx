@@ -1,6 +1,6 @@
 import { Lock } from 'lucide-react'
 import { useState } from 'react'
-import { contasDoMes, estimadoNoMes, pagadorDe, parteDe, valorNoMes } from '../calc'
+import { contasDoMes, ehConjunta, estimadoNoMes, idPagamento, pagadorDe, parteDe, valorNoMes } from '../calc'
 import { ValorMesForm } from '../forms'
 import { alternarPago, useEstado, type Conta, type Quem } from '../store'
 import { brl, Check, cor, nomeDoMes } from '../ui'
@@ -17,8 +17,8 @@ export function Contas({ mes, onEditar }: { mes: string; onEditar: (c: Conta | '
   const visiveis = contasDoMes(e, mes).filter((c) => c.tipo === 'casa' || c.pagador === e.perfil)
   const contas = [...visiveis]
     .sort((a, b) => a.dia - b.dia)
-    .filter((c) => filtro === 'todas' || (filtro === 'pagas') === pagos.includes(c.id))
-  const pendentes = visiveis.filter((c) => !pagos.includes(c.id))
+    .filter((c) => filtro === 'todas' || (filtro === 'pagas') === pagos.includes(idPagamento(c, e.perfil)))
+  const pendentes = visiveis.filter((c) => !pagos.includes(idPagamento(c, e.perfil)))
   const semValor = visiveis.filter((c) => estimadoNoMes(c, mes)).length
 
   return (
@@ -40,19 +40,19 @@ export function Contas({ mes, onEditar }: { mes: string; onEditar: (c: Conta | '
       </div>
       <ul className="lista">
         {contas.map((c) => {
-          const pago = pagos.includes(c.id)
+          const pago = pagos.includes(idPagamento(c, e.perfil))
           const valor = valorNoMes(c, mes)
           const estimado = estimadoNoMes(c, mes)
           const quem = pagadorDe(c)
           const soDeUm = c.tipo === 'casa' && c.divisao && c.divisao !== 'meio'
           return (
             <li key={c.id} className={pago ? 'pago' : ''} onClick={() => onEditar(c)}>
-              <Check marcado={pago} onClick={() => alternarPago(mes, c.id)} rotulo={'Marcar ' + c.nome + ' como paga'} />
+              <Check marcado={pago} onClick={() => alternarPago(mes, idPagamento(c, e.perfil))} rotulo={'Marcar ' + c.nome + ' como paga'} />
               <span className="nome">
                 {c.nome}
                 <small>
                   {c.tipo === 'casa' ? (
-                    <><i className={'ponto ' + cor(quem)} /> {soDeUm ? 'Só ' + nome(quem) : nome(quem) + ' paga'} · </>
+                    <><i className={'ponto ' + cor(quem)} /> {soDeUm ? 'Só ' + nome(quem) : ehConjunta(c) ? 'Meio a meio · cada um paga a sua parte' : 'Meio a meio · boleto com ' + nome(quem)} · </>
                   ) : (
                     <><Lock size={11} /> Pessoal, só você vê · </>
                   )}

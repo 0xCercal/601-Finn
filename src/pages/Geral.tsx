@@ -1,7 +1,7 @@
 import { ArrowDownRight, ArrowUpRight, Building2, Check as Ok, Droplets, Flame, House, KeyRound, Landmark, Wifi, Zap, type LucideIcon } from 'lucide-react'
 import type { Pagina } from '../App'
 import { useEffect, useState } from 'react'
-import { diasParaGastar, limiteLivre, pagadorDe, resumo, type ItemAPagar } from '../calc'
+import { diasParaGastar, ehConjunta, limiteLivre, resumo, type ItemAPagar } from '../calc'
 import { alternarPago, marcarAcerto, useEstado } from '../store'
 import { brl, Check, cor, Ilustracao, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
@@ -179,7 +179,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const r = resumo(e, mes)
   const base = Math.max(r.salario, r.parteCasa + r.pessoais + r.diaADiaUsado + Math.max(r.totalGuardado, 0), 1)
   const pctMoradia = pct(r.moradia, r.salario)
-  const pctEu = pct(r.pagoEu, r.totalCasa)
+  const pctEu = pct(r.parteCasa, r.totalCasa)
   const dias = diasParaGastar(mes)
   const nomeDe = (q: 'eu' | 'par') => (q === 'eu' ? e.nomeEu : e.nomePar)
 
@@ -247,24 +247,39 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
             <p className="apoio">Total das contas</p>
             <Valor v={r.totalCasa} className="grande" />
             <div className="duelo">
-              <div><span><i className={'ponto ' + cor(r.eu)} /> Você paga</span><strong>{brl(r.pagoEu)}</strong></div>
-              <div className="dir"><span>{r.nomeOutro} paga <i className={'ponto ' + cor(r.outro)} /></span><strong>{brl(r.pagoPar)}</strong></div>
+              <div><span><i className={'ponto ' + cor(r.eu)} /> Você arca</span><strong>{brl(r.parteCasa)}</strong></div>
+              <div className="dir"><span>{r.nomeOutro} arca <i className={'ponto ' + cor(r.outro)} /></span><strong>{brl(r.totalCasa - r.parteCasa)}</strong></div>
             </div>
             <div className="barra dupla">
               <i style={{ width: pctEu + '%', background: `var(--${cor(r.eu)})` }}>{r.totalCasa > 0 && pctEu + '%'}</i>
               <i style={{ width: 100 - pctEu + '%', background: `var(--${cor(r.outro)})` }}>{r.totalCasa > 0 && 100 - pctEu + '%'}</i>
-              <b style={{ left: pct(r.parteCasa, r.totalCasa) + '%' }} />
             </div>
-            <p className="apoio">Sua parte: <strong>{brl(r.parteCasa)}</strong> (o traço na barra)</p>
-            <h4>Quem paga cada conta</h4>
+            <h4>Quem arca com cada conta</h4>
             <ul className="lista simples">
-              {r.casa.map((c) => (
-                <li key={c.id}>
-                  <i className={'ponto ' + cor(pagadorDe(c))} />
-                  <span className="nome">{c.nome}{c.divisao && c.divisao !== 'meio' && <small>só {nomeDe(c.divisao)}</small>}</span>
-                  <strong>{c.estimado && '≈ '}{brl(c.valor)}</strong>
-                </li>
-              ))}
+              {r.casa.map((c) => {
+                const dono = c.divisao && c.divisao !== 'meio' ? c.divisao : null
+                return (
+                  <li key={c.id}>
+                    {dono ? (
+                      <i className={'ponto ' + cor(dono)} />
+                    ) : (
+                      <span className="pontos-dois"><i className="ponto azul" /><i className="ponto rosa" /></span>
+                    )}
+                    <span className="nome">
+                      {c.nome}
+                      <small>
+                        {dono
+                          ? 'só ' + nomeDe(dono)
+                          : 'meio a meio · ' + (ehConjunta(c) ? 'cada um paga a sua parte' : 'boleto com ' + nomeDe(c.pagador))}
+                      </small>
+                    </span>
+                    <span className="direita">
+                      <strong>{c.estimado && '≈ '}{brl(c.valor)}</strong>
+                      {!dono && <small>{brl(c.valor / 2)} cada</small>}
+                    </span>
+                  </li>
+                )
+              })}
               {r.casa.length === 0 && <li className="vazio">Nenhuma conta da casa ainda.</li>}
             </ul>
 

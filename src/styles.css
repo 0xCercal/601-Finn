@@ -413,3 +413,5 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 .entra-texto small, .entra-texto strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .entra-texto small { font-size: 12px; }
 .entra-texto strong { font-size: 14px; }
+
+.pontos-dois { display: inline-flex; gap: 2px; flex: none; }

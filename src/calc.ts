@@ -35,6 +35,15 @@ export const estimadoNoMes = (c: Conta, mes: string) => Boolean(c.variavel) && !
 /** Quem paga a conta da casa: se ela é só de uma pessoa, essa pessoa; senão, quem foi escolhido. */
 export const pagadorDe = (c: Conta) => (c.divisao && c.divisao !== 'meio' ? c.divisao : c.pagador)
 
+/** Conta meio a meio em que cada um paga a própria metade (conta conjunta): não gera acerto. */
+export const ehConjunta = (c: Conta) => c.tipo === 'casa' && Boolean(c.conjunta) && (c.divisao ?? 'meio') === 'meio'
+
+/**
+ * Chave usada para marcar a conta como paga. Na conta conjunta cada pessoa marca a sua metade,
+ * então a chave leva o perfil; nas demais, a marcação é uma só para a casa.
+ */
+export const idPagamento = (c: Conta, q: Quem) => (ehConjunta(c) ? c.id + ':' + q : c.id)
+
 /** Quanto de uma conta da casa cabe a uma pessoa (usa `c.valor`, que pode já ser o valor do mês). */
 export function parteDe(c: Conta, q: Quem) {
   const d = c.divisao ?? 'meio'
@@ -138,7 +147,8 @@ export function resumo(e: Estado, mes: string, extra = 0) {
   const totalCasa = soma(casa)
   /** quanto das contas da casa cabe a mim (metade das divididas + as que são só minhas) */
   const parteCasa = casa.reduce((s, c) => s + parteDe(c, v.eu), 0)
-  const pagoEu = soma(casa.filter((c) => pagadorDe(c) === v.eu))
+  // quanto eu desembolso: minha metade nas conjuntas; o boleto inteiro nas que eu pago
+  const pagoEu = casa.reduce((s, c) => s + (ehConjunta(c) ? parteDe(c, v.eu) : pagadorDe(c) === v.eu ? c.valor : 0), 0)
   const pagoPar = totalCasa - pagoEu
   /** > 0: o outro me devolve; < 0: eu devolvo */
   const acerto = pagoEu - parteCasa
@@ -161,9 +171,16 @@ export function resumo(e: Estado, mes: string, extra = 0) {
 
   const pagos = e.pagos[mes] ?? []
   const itens: ItemAPagar[] = [
-    ...[...casa.filter((c) => pagadorDe(c) === v.eu), ...pess].map((c) => ({
-      id: c.id, nome: c.nome, valor: c.valor, dia: c.dia, estimado: c.estimado,
-    })),
+    ...casa
+      .filter((c) => ehConjunta(c) || pagadorDe(c) === v.eu)
+      .map((c) => ({
+        id: idPagamento(c, v.eu),
+        nome: c.nome,
+        valor: ehConjunta(c) ? parteDe(c, v.eu) : c.valor,
+        dia: c.dia,
+        estimado: c.estimado,
+      })),
+    ...pess.map((c) => ({ id: c.id, nome: c.nome, valor: c.valor, dia: c.dia, estimado: c.estimado })),
     ...faturas
       .filter((f) => f.valor > 0)
       .map((f) => ({ id: 'fatura:' + f.cartao.id, nome: 'Fatura ' + f.cartao.nome, valor: f.valor, dia: f.cartao.diaVence, estimado: false })),

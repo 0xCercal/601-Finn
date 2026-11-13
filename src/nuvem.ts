@@ -100,7 +100,12 @@ function separar(e: Estado): Docs {
     const contas = e.contas.filter((x) => x.tipo === 'pessoal' && x.pagador === q)
     const cartoes = e.cartoes.filter((x) => x.dono === q)
     const idsCartoes = new Set(cartoes.map((x) => x.id))
-    const ids = new Set([...contas.map((x) => x.id), ...cartoes.map((x) => 'fatura:' + x.id)])
+    const ids = new Set([
+      ...contas.map((x) => x.id),
+      ...cartoes.map((x) => 'fatura:' + x.id),
+      // contas conjuntas: cada pessoa marca a própria metade como paga
+      ...casa.map((x) => x.id + ':' + q),
+    ])
     return {
       salario: q === 'eu' ? e.salario : e.salarioPar,
       diaADia: q === 'eu' ? e.diaADia : e.diaADiaPar,
