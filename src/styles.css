@@ -402,7 +402,8 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
   .grade { grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); grid-template-areas: none; }
   .col-esq, .col-dir { display: grid; gap: 16px; align-content: start; min-width: 0; grid-template-columns: minmax(0, 1fr); }
   .par { display: grid; gap: 16px; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
-  .col-esq > *, .col-dir > *, .par > * { grid-area: auto; }
+  /* mais específico que as regras .a-* de cada cartão, para nenhuma área nomeada vazar para dentro das colunas */
+  .grade .col-esq > *, .grade .col-dir > *, .grade .par > * { grid-area: auto; }
 }
 
 /* ---------- moradia: o que entra na conta ---------- */
