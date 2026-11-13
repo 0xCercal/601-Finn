@@ -2,7 +2,7 @@ import { ArrowDownRight, ArrowUpRight, Building2, Check as Ok, Droplets, Flame, 
 import type { Pagina } from '../App'
 import { useEffect, useState } from 'react'
 import { diasParaGastar, ehConjunta, limiteLivre, resumo, type ItemAPagar } from '../calc'
-import { alternarPago, marcarAcerto, useEstado } from '../store'
+import { alternarPago, useEstado } from '../store'
 import { brl, Check, cor, Ilustracao, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
 import { ParaOndeFoi } from '../PainelCategorias'
@@ -22,7 +22,6 @@ function iconeMoradia(nome: string): LucideIcon {
   return House
 }
 
-const dataCurta = (iso: string) => iso.slice(8, 10) + '/' + iso.slice(5, 7)
 
 /** "hoje", "amanhã", "em 5 dias", "venceu há 2 dias" para o dia `dia` do mês `mes`. */
 function quando(mes: string, dia: number) {
@@ -183,9 +182,6 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
   const dias = diasParaGastar(mes)
   const nomeDe = (q: 'eu' | 'par') => (q === 'eu' ? e.nomeEu : e.nomePar)
 
-  const temAcerto = Math.abs(r.acerto) >= 0.01
-  const feito = e.acertos[mes]
-  const historico = Object.entries(e.acertos).sort(([a], [b]) => b.localeCompare(a))
 
   const fatias = [
     { rotulo: 'Sua parte da casa', v: r.parteCasa, cor: 'var(--marinho)' },
@@ -283,59 +279,6 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
               {r.casa.length === 0 && <li className="vazio">Nenhuma conta da casa ainda.</li>}
             </ul>
 
-            {(temAcerto || feito) && (
-              <div className="acerto">
-                <p>
-                  {temAcerto ? (
-                    <>
-                      {r.acerto > 0 ? r.nomeOutro + ' te devolve' : 'Você devolve'} <strong>{brl(Math.abs(r.acerto))}</strong>
-                      {r.acerto < 0 && ' para ' + r.nomeOutro}
-                    </>
-                  ) : (
-                    'As contas estão divididas igualmente.'
-                  )}
-                  {feito && (
-                    <small className="positivo">
-                      <Ok size={13} /> Acertado em {dataCurta(feito.em)}
-                      {temAcerto && Math.abs(feito.valor - Math.abs(r.acerto)) >= 0.01 && ` (${brl(feito.valor)}; o valor mudou depois)`}
-                    </small>
-                  )}
-                </p>
-                {feito ? (
-                  <button className="botao leve" onClick={() => marcarAcerto(mes, null)}>Desfazer</button>
-                ) : (
-                  <button
-                    className="botao leve"
-                    onClick={() =>
-                      marcarAcerto(mes, {
-                        valor: Math.round(Math.abs(r.acerto) * 100) / 100,
-                        de: r.acerto > 0 ? r.outro : r.eu,
-                        para: r.acerto > 0 ? r.eu : r.outro,
-                        em: new Date().toISOString().slice(0, 10),
-                      })
-                    }
-                  >
-                    Marcar feito
-                  </button>
-                )}
-              </div>
-            )}
-            {historico.length > 0 && (
-              <details className="historico">
-                <summary>Histórico de acertos</summary>
-                <ul className="lista simples">
-                  {historico.map(([m, a]) => (
-                    <li key={m}>
-                      <span className="nome">
-                        {nomeDoMes(m)} de {m.slice(0, 4)}
-                        <small>{nomeDe(a.de)} → {nomeDe(a.para)} · em {dataCurta(a.em)}</small>
-                      </span>
-                      <strong>{brl(a.valor)}</strong>
-                    </li>
-                  ))}
-                </ul>
-              </details>
-            )}
           </section>
 
           <section className="cartao a-cartoes">

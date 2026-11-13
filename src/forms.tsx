@@ -116,12 +116,12 @@ export function ContaForm({ conta, mes, onFechar }: { conta: Conta | null; mes: 
         {tipo === 'casa' && divisao === 'meio' && (
           <p className="apoio espaco">
             {conjunta
-              ? 'Cada um paga a própria metade (ex.: conta conjunta). Não gera acerto entre vocês.'
-              : `${nomeDe(pagador)} paga o boleto inteiro e a outra pessoa devolve a metade no acerto.`}
+              ? 'Cada um paga a própria metade (ex.: conta conjunta) e vê a sua parte em Contas a pagar.'
+              : `O boleto inteiro aparece em Contas a pagar de ${nomeDe(pagador)}. No saldo de cada um conta só a metade.`}
           </p>
         )}
         {tipo === 'casa' && divisao !== 'meio' && (
-          <p className="apoio espaco">Entra inteira nas contas de {nomeDe(divisao)}, sem acerto. Os dois continuam vendo a conta.</p>
+          <p className="apoio espaco">Entra inteira nas contas de {nomeDe(divisao)}. Os dois continuam vendo a conta.</p>
         )}
         <label className="marcar">
           <input type="checkbox" checked={moradia} onChange={(ev) => setMoradia(ev.target.checked)} /> Conta de moradia (aluguel, condomínio, luz…)
