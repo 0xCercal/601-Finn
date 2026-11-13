@@ -98,11 +98,28 @@ export interface Acerto {
   em: string
 }
 
+export type TipoEntrada = 'variavel' | 'decimo' | 'ferias' | 'abono' | 'outro'
+
+/** Dinheiro que entra num mês além do salário base (variável, 13º, férias…). Pessoal: só o dono vê. */
+export interface Entrada {
+  id: string
+  tipo: TipoEntrada
+  valor: number
+  descricao: string
+  /** 'AAAA-MM' */
+  mes: string
+  dono: Quem
+}
+
 export interface Estado {
   nomeEu: string
   nomePar: string
+  /** salário base (fixo todo mês) */
   salario: number
   salarioPar: number
+  /** variável esperado por mês, usado enquanto o do mês não é lançado (0 = não conta) */
+  variavelEsperado: number
+  variavelEsperadoPar: number
   diaADia: number
   diaADiaPar: number
   /** quem está usando o app agora */
@@ -112,6 +129,7 @@ export interface Estado {
   compras: Compra[]
   metas: Meta[]
   gastos: Gasto[]
+  entradas: Entrada[]
   /** categoria aprendida por estabelecimento, de cada pessoa */
   regras: Record<Quem, Record<string, Categoria>>
   /** ids pagos por mês ('AAAA-MM') */
@@ -156,6 +174,9 @@ function exemplo(): Estado {
     nomePar: 'Pessoa 2',
     salario: 9000,
     salarioPar: 8000,
+    variavelEsperado: 1000,
+    variavelEsperadoPar: 0,
+    entradas: [],
     diaADia: 500,
     diaADiaPar: 400,
     perfil: 'eu',
@@ -209,6 +230,9 @@ function carregar(): Estado {
         metas: salvo.metas ?? [],
         acertos: salvo.acertos ?? {},
         gastos: salvo.gastos ?? [],
+        entradas: salvo.entradas ?? [],
+        variavelEsperado: salvo.variavelEsperado ?? 0,
+        variavelEsperadoPar: salvo.variavelEsperadoPar ?? 0,
         regras: salvo.regras ?? { eu: {}, par: {} },
       }
       e.cartoes = e.cartoes.map((c) => ({ ...c, dono: c.dono ?? 'eu' }))
@@ -333,6 +357,9 @@ export function definirCategoria(tipo: 'compra' | 'gasto', id: string, categoria
   }))
 }
 
+export const salvarEntrada = (x: Entrada) => alterar((e) => ({ ...e, entradas: gravar(e.entradas, x) }))
+export const excluirEntrada = (id: string) => alterar((e) => ({ ...e, entradas: e.entradas.filter((x) => x.id !== id) }))
+
 export const salvarGasto = (g: Gasto) => alterar((e) => ({ ...e, gastos: gravar(e.gastos, g) }))
 export const excluirGasto = (id: string) => alterar((e) => ({ ...e, gastos: e.gastos.filter((g) => g.id !== id) }))
 
@@ -359,5 +386,5 @@ export function trocarPerfil(perfil?: Quem) {
 }
 
 export function zerarTudo() {
-  alterar((e) => ({ ...e, contas: [], cartoes: [], compras: [], metas: [], gastos: [], pagos: {}, acertos: {} }))
+  alterar((e) => ({ ...e, contas: [], cartoes: [], compras: [], metas: [], gastos: [], entradas: [], pagos: {}, acertos: {} }))
 }

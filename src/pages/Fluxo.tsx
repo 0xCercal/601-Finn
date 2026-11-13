@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { resumo } from '../calc'
-import { difMeses, somaMes, useEstado } from '../store'
+import { difMeses, mesAtual, somaMes, useEstado } from '../store'
 import { brl, Campo, lerValor, nomeDoMes } from '../ui'
 
 /** Rótulo do eixo: só o mês; o ano aparece no primeiro mês e em cada janeiro. */
@@ -18,6 +18,12 @@ export function Fluxo({ mes }: { mes: string }) {
   const [valor, setValor] = useState('')
   const [parcelas, setParcelas] = useState('1')
   const [inicio, setInicio] = useState(mes)
+  const [comPlano, setComPlano] = useState(true)
+
+  // quanto planejo guardar por mês: caixinhas minhas inteiras, as da casa pela metade
+  const planejado = e.metas
+    .filter((x) => x.dono === e.perfil || x.dono === 'casa')
+    .reduce((s, x) => s + (x.dono === 'casa' ? x.aporte / 2 : x.aporte), 0)
 
   const total = lerValor(valor)
   const n = Math.min(48, Math.max(1, parseInt(parcelas) || 1))
@@ -28,7 +34,10 @@ export function Fluxo({ mes }: { mes: string }) {
     const r = resumo(e, m)
     const d = simulando ? difMeses(inicio, m) : -1
     const extra = d >= 0 && d < n ? total / n : 0
-    return { m, metade: r.parteCasa, pessoais: r.pessoais, sobra: r.sobra, extra, comCompra: r.sobra - extra }
+    // do mês atual em diante, conta o que falta guardar para cumprir o plano das caixinhas
+    const guardar = comPlano && m >= mesAtual() ? Math.max(planejado, r.totalGuardado) : r.totalGuardado
+    const sobra = r.sobra + r.totalGuardado - guardar
+    return { m, renda: r.salario, estimado: r.variavelEstimado, metade: r.parteCasa, pessoais: r.pessoais, guardar, sobra, extra, comCompra: sobra - extra }
   })
 
   // escala única para as barras e para o marcador "sem a compra"
@@ -45,9 +54,13 @@ export function Fluxo({ mes }: { mes: string }) {
     <section className="cartao pagina">
       <h3>Fluxo de caixa</h3>
       <p className="apoio">
-        Sobra prevista de {nomeDoMes(mes)} em diante, mês a mês. Considera as contas de todo mês, os lançamentos avulsos e as
-        parcelas dos cartões; o salário é o de hoje.
+        Sobra prevista de {nomeDoMes(mes)} em diante, mês a mês. Renda = salário base + variável (o lançado ou o esperado, marcado com ≈)
+        + entradas extras. Contas de todo mês, lançamentos avulsos e parcelas dos cartões já entram.
       </p>
+      <label className="marcar espaco">
+        <input type="checkbox" checked={comPlano} onChange={(ev) => setComPlano(ev.target.checked)} />
+        Descontar o que planejo guardar nas caixinhas ({brl(planejado)} por mês; as da casa contam pela metade)
+      </label>
 
       <div className="simulador">
         <h4>E se eu fizer uma compra?</h4>
@@ -120,8 +133,10 @@ export function Fluxo({ mes }: { mes: string }) {
           <thead>
             <tr>
               <th>Mês</th>
+              <th>Renda</th>
               <th>Sua parte da casa</th>
               <th>Contas pessoais</th>
+              <th>Caixinhas</th>
               {simulando && <th>Compra simulada</th>}
               <th>Sobra</th>
             </tr>
@@ -130,8 +145,10 @@ export function Fluxo({ mes }: { mes: string }) {
             {linhas.map((l) => (
               <tr key={l.m}>
                 <td>{porExtenso(l.m)}</td>
+                <td>{l.estimado && '≈ '}{brl(l.renda)}</td>
                 <td>{brl(l.metade)}</td>
                 <td>{brl(l.pessoais)}</td>
+                <td>{l.guardar ? brl(l.guardar) : '—'}</td>
                 {simulando && <td>{l.extra ? brl(l.extra) : '—'}</td>}
                 <td><strong>{brl(l.comCompra)}</strong></td>
               </tr>

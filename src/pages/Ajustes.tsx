@@ -3,7 +3,7 @@ import { desconectar, useNuvem } from '../nuvem'
 import { alterar, trocarPerfil, useEstado, zerarTudo, type Estado } from '../store'
 import { Campo, lerValor, paraCampo } from '../ui'
 
-type ChaveValor = 'salario' | 'salarioPar' | 'diaADia' | 'diaADiaPar'
+type ChaveValor = 'salario' | 'salarioPar' | 'diaADia' | 'diaADiaPar' | 'variavelEsperado' | 'variavelEsperadoPar'
 
 function Dinheiro({ chave }: { chave: ChaveValor }) {
   const e = useEstado()
@@ -47,8 +47,10 @@ export function Ajustes() {
       <h4>Seu perfil</h4>
       <div className="duas espaco">
         <Campo rotulo="Seu nome">{texto(souEu ? 'nomeEu' : 'nomePar')}</Campo>
-        <Campo rotulo="Seu salário (R$)"><Dinheiro key={e.perfil} chave={souEu ? 'salario' : 'salarioPar'} /></Campo>
+        <Campo rotulo="Salário base (R$)"><Dinheiro key={e.perfil} chave={souEu ? 'salario' : 'salarioPar'} /></Campo>
       </div>
+      <Campo rotulo="Variável esperado por mês (R$, opcional)"><Dinheiro key={e.perfil + 'v'} chave={souEu ? 'variavelEsperado' : 'variavelEsperadoPar'} /></Campo>
+      <p className="apoio espaco">Usado nos meses em que você ainda não lançou o variável (Visão geral → Renda do mês). Deixe 0 para não contar com ele.</p>
       <Campo rotulo="Reserva para o dia a dia (R$)"><Dinheiro key={e.perfil} chave={souEu ? 'diaADia' : 'diaADiaPar'} /></Campo>
       <Campo rotulo="Nome da outra pessoa">{texto(souEu ? 'nomePar' : 'nomeEu')}</Campo>
 

@@ -128,6 +128,7 @@ export function visao(e: Estado) {
     nomeOutro: eu === 'eu' ? e.nomePar : e.nomeEu,
     salario: eu === 'eu' ? e.salario : e.salarioPar,
     diaADia: eu === 'eu' ? e.diaADia : e.diaADiaPar,
+    variavelEsperado: eu === 'eu' ? e.variavelEsperado : e.variavelEsperadoPar,
   }
 }
 
@@ -156,8 +157,15 @@ export function resumo(e: Estado, mes: string, extra = 0) {
   const faturas = e.cartoes.filter((c) => c.dono === v.eu).map((c) => ({ cartao: c, valor: faturaDoMes(e, c, mes).total }))
   const totalFaturas = soma(faturas)
   const pessoais = soma(pess) + totalFaturas + extra
-  /** o que sobra do salário depois de todas as contas, antes da reserva do dia a dia */
-  const livre = v.salario - parteCasa - pessoais
+  // renda do mês: salário base + variável (o lançado no mês, ou o esperado) + entradas extras
+  const entradasMes = e.entradas.filter((x) => x.dono === v.eu && x.mes === mes)
+  const variavelLancado = entradasMes.filter((x) => x.tipo === 'variavel')
+  const variavel = variavelLancado.length ? soma(variavelLancado) : v.variavelEsperado
+  const variavelEstimado = !variavelLancado.length && v.variavelEsperado > 0
+  const extras = soma(entradasMes.filter((x) => x.tipo !== 'variavel'))
+  const renda = v.salario + variavel + extras
+  /** o que sobra da renda depois de todas as contas, antes da reserva do dia a dia */
+  const livre = renda - parteCasa - pessoais
   const lancamentos = e.gastos.filter((g) => g.dono === v.eu && g.data.startsWith(mes)).sort((a, b) => b.data.localeCompare(a.data))
   const gastos = lancamentos.filter((g) => g.forma !== 'caixinha')
   const totalGastos = soma(gastos)
@@ -199,6 +207,8 @@ export function resumo(e: Estado, mes: string, extra = 0) {
 
   return {
     ...v,
+    // daqui em diante "salario" é a renda total do mês (base + variável + extras)
+    salario: renda, salarioBase: v.salario, variavel, variavelEstimado, extras, entradasMes,
     casa, totalCasa, parteCasa, pagoEu, pagoPar, acerto,
     faturas, totalFaturas, pessoais, livre, sobra,
     lancamentos, gastos, totalGastos, totalGuardado, diaADiaUsado, disponivel,

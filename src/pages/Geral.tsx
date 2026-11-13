@@ -6,6 +6,7 @@ import { alternarPago, useEstado } from '../store'
 import { brl, Check, cor, Ilustracao, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
 import { ParaOndeFoi } from '../PainelCategorias'
+import { RendaDoMes } from '../Renda'
 import { FORMAS, GastoForm } from '../forms'
 import type { Gasto } from '../store'
 
@@ -220,7 +221,7 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
           </div>
           <div className="legenda">
             <div>
-              <span>Salário</span>
+              <span>Renda do mês</span>
               <strong>{brl(r.salario)}</strong>
             </div>
             {fatias.map((f) => (
@@ -233,6 +234,8 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
             ))}
           </div>
         </section>
+
+        <RendaDoMes mes={mes} r={r} irAjustes={() => ir('ajustes')} />
 
         <GastosDoDia mes={mes} r={r} dias={dias} />
 

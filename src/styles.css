@@ -324,7 +324,7 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 
 /* ---------- telas menores ---------- */
 @media (max-width: 1150px) {
-  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: 'saldo saldo' 'gastos pagar' 'categorias categorias' 'divisao cartoes' 'moradia moradia'; }
+  .grade { grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-areas: 'saldo saldo' 'renda renda' 'gastos pagar' 'categorias categorias' 'divisao cartoes' 'moradia moradia'; }
   .legenda { grid-template-columns: repeat(3, auto); }
 }
 
@@ -332,7 +332,7 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
   .app { grid-template-columns: 1fr; padding: 12px 12px 96px; }
   .lateral, .so-desktop { display: none; }
   .ilustracao, .a-saldo .ilustracao { width: 64px; height: 64px; margin: -6px -4px 4px 8px; }
-  .grade { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'saldo' 'gastos' 'categorias' 'pagar' 'divisao' 'cartoes' 'moradia';
+  .grade { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'saldo' 'renda' 'gastos' 'categorias' 'pagar' 'divisao' 'cartoes' 'moradia';
   .chip-cat .rotulo { display: none; } }
   .topo h1 { font-size: 20px; }
   .valor.enorme { font-size: 40px; }
@@ -415,3 +415,10 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 .entra-texto strong { font-size: 14px; }
 
 .pontos-dois { display: inline-flex; gap: 2px; flex: none; }
+
+/* ---------- renda do mês ---------- */
+.a-renda { grid-area: renda; }
+.a-renda .cabeca { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.a-renda .cabeca .botao { flex: none; }
+.abas.quebra { flex-wrap: wrap; }
+.abas.quebra button { flex: 1 0 auto; }

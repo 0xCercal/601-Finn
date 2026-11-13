@@ -1,6 +1,6 @@
 import { createClient, type RealtimeChannel } from '@supabase/supabase-js'
 import { useSyncExternalStore } from 'react'
-import { definir, lerEstado, limparLocal, registrarAoMudar, type Acerto, type Cartao, type Compra, type Conta, type Estado, type Gasto, type Meta, type Quem } from './store'
+import { definir, lerEstado, limparLocal, registrarAoMudar, type Acerto, type Cartao, type Compra, type Conta, type Estado, type Entrada, type Gasto, type Meta, type Quem } from './store'
 import type { Categoria } from './categorias'
 
 /**
@@ -61,6 +61,8 @@ interface DocCasa {
 
 interface DocPessoa {
   salario?: number
+  variavelEsperado?: number
+  entradas?: Entrada[]
   diaADia?: number
   contas?: Conta[]
   cartoes?: Cartao[]
@@ -108,6 +110,8 @@ function separar(e: Estado): Docs {
     ])
     return {
       salario: q === 'eu' ? e.salario : e.salarioPar,
+      variavelEsperado: q === 'eu' ? e.variavelEsperado : e.variavelEsperadoPar,
+      entradas: e.entradas.filter((x) => x.dono === q),
       diaADia: q === 'eu' ? e.diaADia : e.diaADiaPar,
       contas,
       cartoes,
@@ -144,6 +148,9 @@ function juntar(d: Docs, base: Estado): Estado {
     nomePar: d.casa.nomes?.par ?? 'Pessoa 2',
     salario: d.eu.salario ?? 0,
     salarioPar: d.par.salario ?? 0,
+    variavelEsperado: d.eu.variavelEsperado ?? 0,
+    variavelEsperadoPar: d.par.variavelEsperado ?? 0,
+    entradas: [...(d.eu.entradas ?? []), ...(d.par.entradas ?? [])],
     diaADia: d.eu.diaADia ?? 0,
     diaADiaPar: d.par.diaADia ?? 0,
     contas: [...(d.casa.contas ?? []), ...(d.eu.contas ?? []), ...(d.par.contas ?? [])],
