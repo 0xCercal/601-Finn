@@ -1,4 +1,4 @@
-import { Minus, PiggyBank, Plus, Repeat, ArrowDownRight, ArrowUpRight, Building2, Check as Ok, Droplets, Flame, House, KeyRound, Landmark, Wifi, Zap, type LucideIcon } from 'lucide-react'
+import { ArrowDownRight, ArrowUpRight, Building2, Check as Ok, Droplets, Flame, House, KeyRound, Landmark, Wifi, Zap, type LucideIcon } from 'lucide-react'
 import type { Pagina } from '../App'
 import { useEffect, useState } from 'react'
 import { diasParaGastar, ehConjunta, limiteLivre, resumo, type ItemAPagar } from '../calc'
@@ -175,7 +175,7 @@ function GastosDoDia({ mes, r, dias, onNovo }: { mes: string; r: ReturnType<type
   )
 }
 
-export function Geral({ mes, ir, onLancar, onNovaConta }: { mes: string; ir: (p: Pagina) => void; onLancar: (p: PedidoLancamento) => void; onNovaConta: () => void }) {
+export function Geral({ mes, ir, onLancar }: { mes: string; ir: (p: Pagina) => void; onLancar: (p: PedidoLancamento) => void }) {
   const e = useEstado()
   const r = resumo(e, mes)
   const base = Math.max(r.salario, r.parteCasa + r.pessoais + r.diaADiaUsado + Math.max(r.totalGuardado, 0), 1)
@@ -234,13 +234,6 @@ export function Geral({ mes, ir, onLancar, onNovaConta }: { mes: string; ir: (p:
               </div>
             ))}
           </div>
-        </section>
-
-        <section className="acoes-rapidas" aria-label="Lançamentos rápidos">
-          <button onClick={() => onLancar({ tipo: 'gasto' })}><span><Minus size={22} /></span>Gasto</button>
-          <button onClick={() => onLancar({ tipo: 'receita' })}><span><Plus size={22} /></span>Entrada</button>
-          <button onClick={() => onLancar({ tipo: 'gasto', onde: 'caixinha' })}><span><PiggyBank size={22} /></span>Caixinha</button>
-          <button onClick={onNovaConta}><span><Repeat size={22} /></span>Conta fixa</button>
         </section>
 
         <RendaDoMes mes={mes} r={r} irAjustes={() => ir('ajustes')} />

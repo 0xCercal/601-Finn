@@ -1,4 +1,4 @@
-import { ArrowDownUp, ArrowLeftRight, Building2, ChevronLeft, ChevronRight, CreditCard, LayoutGrid, Moon, Plus, Settings, Sun, Target, TrendingUp } from 'lucide-react'
+import { ArrowDownUp, Zap, ArrowLeftRight, Building2, ChevronLeft, ChevronRight, CreditCard, LayoutGrid, Moon, Plus, Settings, Sun, Target, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ContaForm, GastoForm } from './forms'
 import { Ajustes } from './pages/Ajustes'
@@ -7,6 +7,7 @@ import { Contas } from './pages/Contas'
 import { Fluxo } from './pages/Fluxo'
 import { Metas } from './pages/Metas'
 import { Extrato } from './pages/Extrato'
+import { Rapido } from './pages/Rapido'
 import { Geral } from './pages/Geral'
 import { visao } from './calc'
 import { Entrada } from './Entrada'
@@ -16,10 +17,12 @@ import { alterar, mesAtual, somaMes, trocarPerfil, useEstado, type Conta, type G
 import { Avisos, cor } from './ui'
 import { LancamentoRapido, type PedidoLancamento } from './Lancamento'
 
-export type Pagina = 'geral' | 'extrato' | 'fluxo' | 'contas' | 'cartoes' | 'metas' | 'ajustes'
+export type Pagina = 'geral' | 'rapido' | 'extrato' | 'fluxo' | 'contas' | 'cartoes' | 'metas' | 'ajustes'
 
-const MENU: { id: Pagina; rotulo: string; curto: string; Icone: typeof LayoutGrid }[] = [
+/** `soCelular`: aparece só na barra de baixo do celular */
+const MENU: { id: Pagina; rotulo: string; curto: string; Icone: typeof LayoutGrid; soCelular?: boolean }[] = [
   { id: 'geral', rotulo: 'Visão geral', curto: 'Início', Icone: LayoutGrid },
+  { id: 'rapido', rotulo: 'Lançar', curto: 'Lançar', Icone: Zap, soCelular: true },
   { id: 'extrato', rotulo: 'Entradas e saídas', curto: 'Extrato', Icone: ArrowDownUp },
   { id: 'fluxo', rotulo: 'Fluxo de caixa', curto: 'Fluxo', Icone: TrendingUp },
   { id: 'contas', rotulo: 'Contas', curto: 'Contas', Icone: Building2 },
@@ -51,7 +54,7 @@ export default function App() {
   if (nuvem.status !== 'local' && (nuvem.status !== 'pronto' || nuvem.escolherPerfil)) return <Entrada />
 
   return (
-    <div className="app">
+    <div className={'app' + (pagina === 'rapido' ? ' sem-fab' : '')}>
       <aside className="lateral">
         <div className="marca">
           <span className="logo"><ArrowLeftRight size={16} /></span>
@@ -61,7 +64,7 @@ export default function App() {
           </div>
         </div>
         <nav>
-          {MENU.map(({ id, rotulo, Icone }) => (
+          {MENU.filter((x) => !x.soCelular).map(({ id, rotulo, Icone }) => (
             <button key={id} className={pagina === id ? 'ativo' : ''} onClick={() => setPagina(id)}>
               <Icone size={16} /> {rotulo}
             </button>
@@ -102,7 +105,8 @@ export default function App() {
         )}
         {nuvem.erro && <p className="aviso">{nuvem.erro}</p>}
 
-        {pagina === 'geral' && <Geral mes={mes} ir={setPagina} onLancar={setLancar} onNovaConta={() => setConta('nova')} />}
+        {pagina === 'geral' && <Geral mes={mes} ir={setPagina} onLancar={setLancar} />}
+        {pagina === 'rapido' && <Rapido mes={mes} onLancar={setLancar} onNovaConta={() => setConta('nova')} />}
         {pagina === 'contas' && <Contas mes={mes} onEditar={setConta} />}
         {pagina === 'cartoes' && <Cartoes mes={mes} />}
         {pagina === 'fluxo' && <Fluxo mes={mes} />}
@@ -118,7 +122,9 @@ export default function App() {
           </button>
         ))}
       </nav>
-      <button className="fab" onClick={() => setLancar({ tipo: 'gasto' })} aria-label="Novo lançamento"><Plus size={24} /></button>
+      {pagina !== 'rapido' && (
+        <button className="fab" onClick={() => setLancar({ tipo: 'gasto' })} aria-label="Novo lançamento"><Plus size={24} /></button>
+      )}
 
       {gasto && <GastoForm gasto={gasto === 'novo' ? null : gasto} mes={mes} onFechar={() => setGasto(null)} />}
       {lancar && <LancamentoRapido pedido={lancar} mes={mes} onFechar={() => setLancar(null)} />}
