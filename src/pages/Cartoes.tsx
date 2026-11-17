@@ -32,7 +32,7 @@ export function Cartoes({ mes }: { mes: string }) {
   const total = meus.reduce((s, c) => s + faturaDoMes(e, c, mes).total, 0)
 
   return (
-    <section className="cartao pagina botoes-cinza">
+    <section className="cartao pagina botoes-azuis">
       <h3>Seus cartões de crédito</h3>
       <Valor v={total} className="grande" />
       <p className="apoio">só você vê · total das faturas que vencem em {nomeDoMes(mes)}</p>

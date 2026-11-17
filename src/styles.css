@@ -578,18 +578,7 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 /* sem o botão + flutuante: a barra de baixo usa a largura toda */
 @media (max-width: 760px) { .inferior { right: 12px; } .inferior button { min-width: 40px; } }
 
-/* ---------- botões cinza estilo Apple (Contas, Cartões, Caixinhas) ---------- */
-:root { --botao-cinza: rgba(120, 120, 128, 0.12); --botao-cinza-hover: rgba(120, 120, 128, 0.2); --botao-cinza-texto: var(--azul); }
-:root[data-theme='escuro'] { --botao-cinza: rgba(120, 120, 128, 0.24); --botao-cinza-hover: rgba(120, 120, 128, 0.34); --botao-cinza-texto: #93c5fd; }
-.botoes-cinza .botao.leve {
-  background: var(--botao-cinza);
-  border-color: transparent;
-  color: var(--botao-cinza-texto);
-  border-radius: 99px;
-  padding: 8px 16px;
-  font-weight: 600;
-  transition: background-color 0.2s ease, scale 0.1s ease;
-}
-.botoes-cinza .botao.leve:hover { background: var(--botao-cinza-hover); filter: none; }
-.botoes-cinza .botao.leve:active { scale: 0.97; }
-.botoes-cinza .botao.leve:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+/* ---------- botões de ação azuis (Contas, Cartões, Caixinhas), iguais ao "Lançar" do topo ---------- */
+.botoes-azuis .botao.leve { background: var(--azul); border-color: transparent; color: #fff; }
+.botoes-azuis .botao.leve:active { scale: 0.97; }
+.botoes-azuis .botao.leve:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }

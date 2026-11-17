@@ -22,7 +22,7 @@ export function Contas({ mes, onEditar }: { mes: string; onEditar: (c: Conta | '
   const semValor = visiveis.filter((c) => estimadoNoMes(c, mes)).length
 
   return (
-    <section className="cartao pagina botoes-cinza">
+    <section className="cartao pagina botoes-azuis">
       <h3>Contas do mês</h3>
       <p className="apoio">
         {visiveis.length} contas · {pendentes.length} pendentes · <strong>{brl(pendentes.reduce((s, c) => s + valorNoMes(c, mes), 0))}</strong>
