@@ -331,6 +331,7 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
 @media (max-width: 760px) {
   .app { grid-template-columns: 1fr; padding: 12px 12px 96px; }
   .lateral, .so-desktop { display: none; }
+  .perfil-topo.so-celular { display: flex; }
   .ilustracao, .a-saldo .ilustracao { width: 64px; height: 64px; margin: -6px -4px 4px 8px; }
   .grade { grid-template-columns: minmax(0, 1fr); grid-template-areas: 'saldo' 'renda' 'gastos' 'categorias' 'pagar' 'divisao' 'cartoes' 'moradia';
   .chip-cat .rotulo { display: none; } }
@@ -441,3 +442,8 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 .extrato .lista.simples { margin-top: 4px; }
 @media (max-width: 900px) { .extrato-colunas { grid-template-columns: minmax(0, 1fr); } }
 @media (max-width: 760px) { .placar { gap: 10px; } .placar > div strong { font-size: 18px; } }
+
+/* ---------- perfil no topo (celular) ---------- */
+.so-celular { display: none; }
+.perfil-topo { flex-direction: column; align-items: center; gap: 2px; margin-left: 4px; }
+.perfil-topo small { font-size: 10px; font-weight: 600; max-width: 64px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }

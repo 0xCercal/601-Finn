@@ -87,6 +87,10 @@ export default function App() {
           {mes !== mesAtual() && <button className="botao leve" onClick={() => setMes(mesAtual())}>Hoje</button>}
           <button className="botao leve so-desktop" onClick={() => setConta('nova')}>Nova conta</button>
           <button className="botao primario so-desktop" onClick={() => setGasto('novo')}><Plus size={16} /> Gasto</button>
+          <button className="perfil-topo so-celular" onClick={() => setPagina('ajustes')} aria-label={'Perfil: ' + v.nome + '. Trocar em Ajustes'}>
+            <span className={'avatar ' + cor(v.eu)}>{v.nome.trim()[0]?.toUpperCase() ?? '?'}</span>
+            <small>{v.nome.trim().split(' ')[0]}</small>
+          </button>
         </header>
 
         {novaVersao && (
