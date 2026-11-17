@@ -54,7 +54,7 @@ export default function App() {
   if (nuvem.status !== 'local' && (nuvem.status !== 'pronto' || nuvem.escolherPerfil)) return <Entrada />
 
   return (
-    <div className={'app' + (pagina === 'rapido' ? ' sem-fab' : '')}>
+    <div className="app">
       <aside className="lateral">
         <div className="marca">
           <span className="logo"><ArrowLeftRight size={16} /></span>
@@ -122,9 +122,6 @@ export default function App() {
           </button>
         ))}
       </nav>
-      {pagina !== 'rapido' && (
-        <button className="fab" onClick={() => setLancar({ tipo: 'gasto' })} aria-label="Novo lançamento"><Plus size={24} /></button>
-      )}
 
       {gasto && <GastoForm gasto={gasto === 'novo' ? null : gasto} mes={mes} onFechar={() => setGasto(null)} />}
       {lancar && <LancamentoRapido pedido={lancar} mes={mes} onFechar={() => setLancar(null)} />}

@@ -506,7 +506,6 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 .rapido-botao.caixinha .rapido-icone { background: color-mix(in srgb, var(--dourado) 16%, var(--cartao)); color: var(--dourado); }
 .rapido-botao.fixa .rapido-icone { background: color-mix(in srgb, var(--azul) 12%, var(--cartao)); color: var(--azul); }
 @media (min-width: 761px) { .rapido { min-height: 0; max-width: 640px; } .rapido-grade { grid-auto-rows: 200px; } }
-@media (max-width: 760px) { .sem-fab .inferior { right: 12px; } }
 
 /* ---------- barra de baixo e botão + em vidro (estilo "liquid glass") ---------- */
 @media (max-width: 760px) {
@@ -576,3 +575,5 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
   :root[data-theme='escuro'] { --vidro: rgba(24, 30, 42, 0.5); }
   .inferior button { color: var(--texto); text-shadow: 0 0 8px color-mix(in srgb, var(--cartao) 70%, transparent); }
 }
+/* sem o botão + flutuante: a barra de baixo usa a largura toda */
+@media (max-width: 760px) { .inferior { right: 12px; } .inferior button { min-width: 40px; } }
