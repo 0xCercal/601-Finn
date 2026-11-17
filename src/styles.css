@@ -546,3 +546,33 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 @media (prefers-reduced-transparency: reduce) {
   @media (max-width: 760px) { .inferior { background: var(--cartao); -webkit-backdrop-filter: none; backdrop-filter: none; } }
 }
+
+/* vidro mais evidente: mais transparente, reflexo diagonal, borda clara e contorno fino */
+@media (max-width: 760px) {
+  :root { --vidro: rgba(255, 255, 255, 0.26); --vidro-ativo: rgba(255, 255, 255, 0.62); --vidro-contorno: rgba(16, 24, 40, 0.10); }
+  :root[data-theme='escuro'] { --vidro: rgba(24, 30, 42, 0.38); --vidro-ativo: rgba(255, 255, 255, 0.14); --vidro-contorno: rgba(0, 0, 0, 0.5); }
+  .inferior {
+    border: 1px solid var(--vidro-borda);
+    background:
+      linear-gradient(135deg, var(--vidro-brilho) -20%, transparent 38%, transparent 62%, color-mix(in srgb, var(--vidro-brilho) 45%, transparent) 120%),
+      var(--vidro);
+    -webkit-backdrop-filter: blur(12px) saturate(210%) brightness(1.06);
+    backdrop-filter: blur(12px) saturate(210%) brightness(1.06);
+    box-shadow:
+      0 0 0 0.5px var(--vidro-contorno),
+      0 18px 40px var(--vidro-sombra),
+      inset 0 1px 1px var(--vidro-brilho),
+      inset 0 -1px 1px color-mix(in srgb, var(--vidro-brilho) 40%, transparent),
+      inset 0 0 14px color-mix(in srgb, var(--vidro-brilho) 35%, transparent);
+  }
+  .inferior button.ativo {
+    background: linear-gradient(180deg, var(--vidro-brilho) -40%, transparent 70%), var(--vidro-ativo);
+    box-shadow: 0 4px 12px var(--vidro-sombra), inset 0 1px 1px var(--vidro-brilho), inset 0 0 0 0.5px var(--vidro-borda);
+  }
+  .fab { box-shadow: 0 0 0 0.5px rgba(16, 24, 40, 0.12), 0 12px 30px rgba(37, 99, 235, 0.38), inset 0 1px 1px rgba(255, 255, 255, 0.7), inset 0 0 14px rgba(255, 255, 255, 0.25); }
+}
+@media (max-width: 760px) {
+  :root { --vidro: rgba(255, 255, 255, 0.42); }
+  :root[data-theme='escuro'] { --vidro: rgba(24, 30, 42, 0.5); }
+  .inferior button { color: var(--texto); text-shadow: 0 0 8px color-mix(in srgb, var(--cartao) 70%, transparent); }
+}
