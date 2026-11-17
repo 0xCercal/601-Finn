@@ -213,7 +213,7 @@ export function resumo(e: Estado, mes: string, extra = 0) {
     faturas, totalFaturas, pessoais, livre, sobra,
     lancamentos, gastos, totalGastos, totalGuardado, diaADiaUsado, disponivel,
     itens, pendente: soma(itens.filter((i) => !i.pago)),
-    moradia, itensMoradia,
+    moradia, itensMoradia, contasPessoais: pess,
   }
 }
 

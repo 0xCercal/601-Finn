@@ -342,7 +342,8 @@ footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 8px; }
   .legenda > div:last-child { border: 0; }
 
   .inferior { display: flex; position: fixed; left: 12px; right: 84px; bottom: max(12px, env(safe-area-inset-bottom)); background: var(--cartao); border-radius: 99px; padding: 5px; box-shadow: 0 8px 24px rgba(16, 24, 40, 0.16); z-index: 10; }
-  .inferior button { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0; border-radius: 99px; font-size: 10px; color: var(--suave); }
+  .inferior { overflow-x: auto; scrollbar-width: none; }
+  .inferior button { flex: 1 0 auto; min-width: 46px; display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 7px 0; border-radius: 99px; font-size: 10px; color: var(--suave); }
   .grafico { padding-left: 0; }
   .grafico .eixo { display: none; }
   .coluna > small { font-size: 8px; }
@@ -423,3 +424,20 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 .a-renda .cabeca .botao { flex: none; }
 .abas.quebra { flex-wrap: wrap; }
 .abas.quebra button { flex: 1 0 auto; }
+
+/* ---------- entradas e saídas ---------- */
+.extrato { display: grid; gap: 16px; }
+.extrato-colunas { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; }
+.placar { display: flex; align-items: flex-end; gap: 18px; flex-wrap: wrap; margin: 6px 0 14px; }
+.placar > div span { display: block; font-size: 12px; color: var(--suave); margin-bottom: 2px; }
+.placar > div strong { font-size: 22px; letter-spacing: -0.02em; }
+.placar .op { font-size: 22px; color: var(--suave); padding-bottom: 4px; }
+.titulo-total { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; }
+.titulo-total h3 { margin: 0; }
+.titulo-total > strong { font-size: 16px; }
+.titulo-total.sub { margin-top: 18px; padding-bottom: 2px; border-bottom: 1px solid var(--linha); }
+.titulo-total.sub h4 { margin: 0; }
+.titulo-total.sub span { font-size: 13px; font-weight: 600; color: var(--suave); }
+.extrato .lista.simples { margin-top: 4px; }
+@media (max-width: 900px) { .extrato-colunas { grid-template-columns: minmax(0, 1fr); } }
+@media (max-width: 760px) { .placar { gap: 10px; } .placar > div strong { font-size: 18px; } }

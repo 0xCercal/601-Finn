@@ -1,4 +1,4 @@
-import { ArrowLeftRight, Building2, ChevronLeft, ChevronRight, CreditCard, LayoutGrid, Moon, Plus, Settings, Sun, Target, TrendingUp } from 'lucide-react'
+import { ArrowDownUp, ArrowLeftRight, Building2, ChevronLeft, ChevronRight, CreditCard, LayoutGrid, Moon, Plus, Settings, Sun, Target, TrendingUp } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { ContaForm, GastoForm } from './forms'
 import { Ajustes } from './pages/Ajustes'
@@ -6,6 +6,7 @@ import { Cartoes } from './pages/Cartoes'
 import { Contas } from './pages/Contas'
 import { Fluxo } from './pages/Fluxo'
 import { Metas } from './pages/Metas'
+import { Extrato } from './pages/Extrato'
 import { Geral } from './pages/Geral'
 import { visao } from './calc'
 import { Entrada } from './Entrada'
@@ -13,10 +14,11 @@ import { useNuvem } from './nuvem'
 import { alterar, mesAtual, somaMes, trocarPerfil, useEstado, type Conta, type Gasto } from './store'
 import { cor } from './ui'
 
-export type Pagina = 'geral' | 'fluxo' | 'contas' | 'cartoes' | 'metas' | 'ajustes'
+export type Pagina = 'geral' | 'extrato' | 'fluxo' | 'contas' | 'cartoes' | 'metas' | 'ajustes'
 
 const MENU: { id: Pagina; rotulo: string; curto: string; Icone: typeof LayoutGrid }[] = [
   { id: 'geral', rotulo: 'Visão geral', curto: 'Início', Icone: LayoutGrid },
+  { id: 'extrato', rotulo: 'Entradas e saídas', curto: 'Extrato', Icone: ArrowDownUp },
   { id: 'fluxo', rotulo: 'Fluxo de caixa', curto: 'Fluxo', Icone: TrendingUp },
   { id: 'contas', rotulo: 'Contas', curto: 'Contas', Icone: Building2 },
   { id: 'cartoes', rotulo: 'Cartões', curto: 'Cartões', Icone: CreditCard },
@@ -91,6 +93,7 @@ export default function App() {
         {pagina === 'cartoes' && <Cartoes mes={mes} />}
         {pagina === 'fluxo' && <Fluxo mes={mes} />}
         {pagina === 'metas' && <Metas mes={mes} />}
+        {pagina === 'extrato' && <Extrato mes={mes} />}
         {pagina === 'ajustes' && <Ajustes />}
       </main>
 
