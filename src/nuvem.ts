@@ -25,6 +25,8 @@ export interface Nuvem {
   status: 'local' | 'carregando' | 'sem-casa' | 'offline' | 'pronto'
   codigo?: string
   erro?: string
+  /** acabou de entrar pelo código: falta dizer quem está usando este aparelho */
+  escolherPerfil?: boolean
 }
 
 let nuvem: Nuvem = { status: supabase ? 'carregando' : 'local' }
@@ -310,8 +312,14 @@ export async function criarCasa() {
 /** Liga este computador a uma casa que já existe. Quem entra por código começa como a segunda pessoa. */
 export async function entrarNaCasa(txt: string) {
   if (!supabase) return
-  definir({ ...lerEstado(), perfil: 'par' })
   await conectar(normalizar(txt))
+  if (nuvem.status === 'pronto') mudar({ escolherPerfil: true })
+}
+
+/** Define quem está usando este aparelho (depois de entrar pelo código). */
+export function escolherPerfil(perfil: Quem) {
+  definir({ ...lerEstado(), perfil })
+  mudar({ escolherPerfil: false })
 }
 
 export const tentarDeNovo = () => (nuvem.codigo ? conectar(nuvem.codigo) : undefined)

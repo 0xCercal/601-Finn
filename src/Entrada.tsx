@@ -1,15 +1,26 @@
 import { useState } from 'react'
-import { criarCasa, desconectar, entrarNaCasa, tentarDeNovo, useNuvem } from './nuvem'
+import { criarCasa, desconectar, entrarNaCasa, escolherPerfil, tentarDeNovo, useNuvem } from './nuvem'
+import { useEstado } from './store'
 import { Campo } from './ui'
 
 /** Telas antes do app: carregando, sem conexão e escolha da casa. */
 export function Entrada() {
   const nuvem = useNuvem()
+  const e = useEstado()
   const [codigo, setCodigo] = useState('')
 
   return (
     <div className="entrada">
       <div className="cartao">
+        {nuvem.status === 'pronto' && nuvem.escolherPerfil && (
+          <>
+            <h2>Quem é você?</h2>
+            <p className="apoio">Escolha quem vai usar este aparelho. Dá para trocar depois em Ajustes.</p>
+            <button className="botao primario" onClick={() => escolherPerfil('eu')}>{e.nomeEu}</button>
+            <p className="ou">ou</p>
+            <button className="botao primario" onClick={() => escolherPerfil('par')}>{e.nomePar}</button>
+          </>
+        )}
         {nuvem.status === 'carregando' && <p className="apoio">Carregando…</p>}
 
         {nuvem.status === 'offline' && (

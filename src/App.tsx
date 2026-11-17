@@ -11,6 +11,7 @@ import { Geral } from './pages/Geral'
 import { visao } from './calc'
 import { Entrada } from './Entrada'
 import { useNuvem } from './nuvem'
+import { vigiarAtualizacao } from './atualizacao'
 import { alterar, mesAtual, somaMes, trocarPerfil, useEstado, type Conta, type Gasto } from './store'
 import { cor } from './ui'
 
@@ -29,6 +30,8 @@ const MENU: { id: Pagina; rotulo: string; curto: string; Icone: typeof LayoutGri
 export default function App() {
   const e = useEstado()
   const nuvem = useNuvem()
+  const [novaVersao, setNovaVersao] = useState(false)
+  useEffect(() => vigiarAtualizacao(() => setNovaVersao(true)), [])
   const [pagina, setPagina] = useState<Pagina>('geral')
   const [mes, setMes] = useState(mesAtual())
   const [conta, setConta] = useState<Conta | 'nova' | null>(null)
@@ -43,7 +46,7 @@ export default function App() {
   const v = visao(e)
   const trocarTema = () => alterar((x) => ({ ...x, tema: x.tema === 'claro' ? 'escuro' : 'claro' }))
 
-  if (nuvem.status !== 'local' && nuvem.status !== 'pronto') return <Entrada />
+  if (nuvem.status !== 'local' && (nuvem.status !== 'pronto' || nuvem.escolherPerfil)) return <Entrada />
 
   return (
     <div className="app">
@@ -86,6 +89,11 @@ export default function App() {
           <button className="botao primario so-desktop" onClick={() => setGasto('novo')}><Plus size={16} /> Gasto</button>
         </header>
 
+        {novaVersao && (
+          <p className="aviso ok versao">
+            Saiu uma versão nova do app. <button className="link" onClick={() => location.reload()}>Atualizar agora</button>
+          </p>
+        )}
         {nuvem.erro && <p className="aviso">{nuvem.erro}</p>}
 
         {pagina === 'geral' && <Geral mes={mes} ir={setPagina} />}
