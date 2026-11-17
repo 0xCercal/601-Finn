@@ -10,7 +10,7 @@
 
 export type Categoria =
   | 'mercado' | 'delivery' | 'transporte' | 'saude' | 'compras' | 'assinaturas'
-  | 'lazer' | 'casa' | 'educacao' | 'viagem' | 'outros'
+  | 'lazer' | 'moradia' | 'casa' | 'educacao' | 'viagem' | 'outros'
 
 export const NOMES_CATEGORIA: Record<Categoria, string> = {
   mercado: 'Mercado e padaria',
@@ -20,6 +20,7 @@ export const NOMES_CATEGORIA: Record<Categoria, string> = {
   compras: 'Compras',
   assinaturas: 'Assinaturas',
   lazer: 'Lazer',
+  moradia: 'Moradia',
   casa: 'Casa e pets',
   educacao: 'Educação',
   viagem: 'Viagem',
@@ -51,6 +52,7 @@ const REGRAS: [Categoria, RegExp][] = [
   ['viagem', /\b(latam|gol linhas|gol trans|azul linhas|voeazul|azul s a|airbnb|booking|hotel|hoteis|pousada|hostel|decolar|123milhas|123 milhas|cvc|expedia|trivago|smiles|maxmilhas|rodoviaria)\b/],
   ['educacao', /\b(escola\w*|colegio\w*|faculdade\w*|universidade\w*|curso|cursos|udemy|alura|coursera|domestika|hotmart|livraria\w*|saraiva|leitura|cultura|estante virtual|duolingo|babbel|wizard|ccaa|fisk|cna|open english)\b/],
   ['lazer', /\b(cinema|cinemark|kinoplex|cinepolis|uci|ingresso|ingressos|sympla|eventim|ticketmaster|tickets for fun|steam|playstation|psn|nintendo|xbox|epic games|riot|bar|boteco|cervej\w*|choper|adega|teatro|museu|parque|show|balada|clube|boliche|karaoke)\b/],
+  ['moradia', /(aluguel|condominio|iptu|financiamento|imobiliaria|quinto ?andar|loft)/],
   ['casa', /\b(leroy|telhanorte|tok ?stok|tokstok|camicado|etna|mobly|madeiramadeira|madeira madeira|ferragem\w*|ferragens|material de constr\w*|materiais de constr\w*|eletrica|hidraulica|casa e video|lojas cem|petz|cobasi|petlove|pet shop|petshop|veterin\w*|lavanderia|chaveiro|vidracaria)\b/],
   ['mercado', /\b(supermerc\w*|super merc\w*|mercado|mercadinho|mercearia\w*|minimercado|carrefour|pao de acucar|extra|assai|atacad\w*|atacarejo|dia brasil|hortifruti|hortifrut\w*|sacolao|oba|st marche|zaffari|guanabara|sams club|makro|tenda|savegnago|comper|condor|muffato|angeloni|bistek|giassi|nagumo|padaria|panificadora\w*|acougue\w*|emporio|quitanda|feira|sacolao)\b/],
 ]

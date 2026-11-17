@@ -1,5 +1,5 @@
 import {
-  Car, ChevronDown, Ellipsis, GraduationCap, HeartPulse, House, Plane, Repeat, ShoppingBag, ShoppingCart, Ticket, UtensilsCrossed, type LucideIcon,
+  Building2, Car, ChevronDown, Ellipsis, GraduationCap, HeartPulse, House, Plane, Repeat, ShoppingBag, ShoppingCart, Ticket, UtensilsCrossed, type LucideIcon,
 } from 'lucide-react'
 import { useState } from 'react'
 import { gastosPorCategoria } from './calc'
@@ -15,6 +15,7 @@ export const ICONES_CATEGORIA: Record<Categoria, LucideIcon> = {
   compras: ShoppingBag,
   assinaturas: Repeat,
   lazer: Ticket,
+  moradia: Building2,
   casa: House,
   educacao: GraduationCap,
   viagem: Plane,
@@ -39,7 +40,7 @@ export function ChipCategoria({ categoria, onClick }: { categoria: Categoria; on
 }
 
 export interface AlvoCategoria {
-  tipo: 'compra' | 'gasto'
+  tipo: 'compra' | 'gasto' | 'conta'
   id: string
   descricao: string
   atual: Categoria
@@ -89,7 +90,7 @@ export function ParaOndeFoi({ mes }: { mes: string }) {
     <section className="cartao a-categorias">
       <h3>Para onde foi o dinheiro</h3>
       <Valor v={r.total} className="grande" />
-      <p className="apoio">cartões e gastos do dia a dia em {nomeDoMes(mes)} · só você vê · toque numa categoria para ver</p>
+      <p className="apoio">contas, cartões e gastos do dia a dia em {nomeDoMes(mes)} · só você vê · toque numa categoria para ver</p>
 
       <ul className="categorias">
         {r.grupos.map((g) => {

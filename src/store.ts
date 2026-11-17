@@ -26,6 +26,8 @@ export interface Conta {
   conjunta?: boolean
   /** o valor muda todo mês (luz, gás): o padrão é só estimativa até informar o valor do mês */
   variavel?: boolean
+  /** categoria escolhida para esta conta (senão: Moradia se for de moradia, ou pelo nome) */
+  categoria?: Categoria
 }
 
 export interface Cartao {
@@ -345,7 +347,7 @@ export const salvarMeta = (m: Meta) => alterar((e) => ({ ...e, metas: gravar(e.m
 export const excluirMeta = (id: string) => alterar((e) => ({ ...e, metas: e.metas.filter((m) => m.id !== id) }))
 
 /** Define a categoria de uma compra ou gasto; com `todas`, aprende para o estabelecimento inteiro. */
-export function definirCategoria(tipo: 'compra' | 'gasto', id: string, categoria: Categoria, todas: { dono: Quem; chave: string } | null) {
+export function definirCategoria(tipo: 'compra' | 'gasto' | 'conta', id: string, categoria: Categoria, todas: { dono: Quem; chave: string } | null) {
   const aplicar = <T extends { id: string; categoria?: Categoria }>(lista: T[]) =>
     // aprendendo para todas, o item segue a regra; senão guarda a escolha só nele
     lista.map((x) => (x.id !== id ? x : todas ? { ...x, categoria: undefined } : { ...x, categoria }))
@@ -353,6 +355,7 @@ export function definirCategoria(tipo: 'compra' | 'gasto', id: string, categoria
     ...e,
     compras: tipo === 'compra' ? aplicar(e.compras) : e.compras,
     gastos: tipo === 'gasto' ? aplicar(e.gastos) : e.gastos,
+    contas: tipo === 'conta' ? aplicar(e.contas) : e.contas,
     regras: todas ? { ...e.regras, [todas.dono]: { ...e.regras[todas.dono], [todas.chave]: categoria } } : e.regras,
   }))
 }

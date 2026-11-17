@@ -218,7 +218,7 @@ export function resumo(e: Estado, mes: string, extra = 0) {
 }
 
 export interface ItemCategoria {
-  tipo: 'compra' | 'gasto'
+  tipo: 'compra' | 'gasto' | 'conta'
   id: string
   descricao: string
   valor: number
@@ -254,6 +254,21 @@ export function gastosPorCategoria(e: Estado, mes: string) {
         categoria: categoriaDe(p.compra, regras),
       })
     }
+  }
+  // contas do mês: a minha parte das contas da casa e as minhas contas pessoais
+  for (const conta of contasDoMes(e, mes)) {
+    if (conta.tipo === 'pessoal' && conta.pagador !== eu) continue
+    const c = { ...conta, valor: valorNoMes(conta, mes) }
+    const valor = c.tipo === 'casa' ? parteDe(c, eu) : c.valor
+    if (valor <= 0) continue
+    itens.push({
+      tipo: 'conta',
+      id: c.id,
+      descricao: c.nome,
+      valor,
+      origem: c.tipo === 'casa' ? (valor < c.valor ? 'conta da casa · sua metade' : 'conta da casa · só sua') : 'conta pessoal',
+      categoria: c.categoria ?? (c.moradia ? 'moradia' : categoriaDe({ descricao: c.nome }, regras)),
+    })
   }
   for (const g of e.gastos) {
     if (g.dono !== eu || g.forma === 'caixinha' || !g.data.startsWith(mes) || g.valor <= 0) continue
