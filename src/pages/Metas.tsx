@@ -26,7 +26,7 @@ export function Metas({ mes }: { mes: string }) {
   const total = caixinhas.reduce((s, m) => s + saldoDaCaixinha(e, m), 0)
 
   return (
-    <section className="cartao pagina">
+    <section className="cartao pagina botoes-cinza">
       <h3>Caixinhas</h3>
       <Valor v={total} className="grande" />
       <p className="apoio">guardado no total, somando as caixinhas da casa e as suas</p>
