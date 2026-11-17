@@ -7,10 +7,19 @@ import { categoriaDe } from '../categorias'
 import { moverImportados, somaMes, useEstado, type Cartao, type Compra } from '../store'
 import { brl, nomeDoMes, Valor } from '../ui'
 
+/** Logo do banco para cartões reconhecidos pelo nome (arquivo em public/icones). */
+function logoDoCartao(nome: string) {
+  return /\bnu\s?bank\b|^nu$/i.test(nome.trim()) ? import.meta.env.BASE_URL + 'icones/logo-nubank.webp' : null
+}
+
 export function CartaoVisual({ cartao, fatura, livre, mes, onClick }: { cartao: Cartao; fatura: number; livre: number; mes: string; onClick?: () => void }) {
   return (
     <div className="plastico" style={{ background: cartao.cor }} onClick={onClick} role={onClick ? 'button' : undefined}>
-      <strong>{cartao.nome}</strong>
+      {logoDoCartao(cartao.nome) ? (
+        <img className="logo-banco" src={logoDoCartao(cartao.nome)!} alt={cartao.nome} draggable={false} />
+      ) : (
+        <strong>{cartao.nome}</strong>
+      )}
       <span className="chip" />
       <div className="rodape">
         <span><small>VENCE</small>{String(cartao.diaVence).padStart(2, '0')}/{mes.slice(5)}</span>

@@ -582,3 +582,8 @@ summary:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; bor
 .botoes-azuis .botao.leve { background: var(--azul); border-color: transparent; color: #fff; }
 .botoes-azuis .botao.leve:active { scale: 0.97; }
 .botoes-azuis .botao.leve:focus-visible { outline: 2px solid var(--azul); outline-offset: 2px; }
+
+.plastico .logo-banco { height: 26px; width: auto; align-self: flex-start; user-select: none; pointer-events: none; }
+/* Editar de cada caixinha: cinza com texto escuro, sem competir com o Guardar */
+.botoes-azuis .meta header .botao.leve { background: var(--campo); color: var(--texto); }
+.botoes-azuis .meta header .botao.leve:hover { background: var(--cinza); }
