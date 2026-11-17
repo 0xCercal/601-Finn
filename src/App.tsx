@@ -13,7 +13,8 @@ import { Entrada } from './Entrada'
 import { useNuvem } from './nuvem'
 import { vigiarAtualizacao } from './atualizacao'
 import { alterar, mesAtual, somaMes, trocarPerfil, useEstado, type Conta, type Gasto } from './store'
-import { cor } from './ui'
+import { Avisos, cor } from './ui'
+import { LancamentoRapido, type PedidoLancamento } from './Lancamento'
 
 export type Pagina = 'geral' | 'extrato' | 'fluxo' | 'contas' | 'cartoes' | 'metas' | 'ajustes'
 
@@ -36,6 +37,7 @@ export default function App() {
   const [mes, setMes] = useState(mesAtual())
   const [conta, setConta] = useState<Conta | 'nova' | null>(null)
   const [gasto, setGasto] = useState<Gasto | 'novo' | null>(null)
+  const [lancar, setLancar] = useState<PedidoLancamento | null>(null)
 
   useEffect(() => {
     document.documentElement.dataset.theme = e.tema
@@ -86,7 +88,7 @@ export default function App() {
           </h1>
           {mes !== mesAtual() && <button className="botao leve" onClick={() => setMes(mesAtual())}>Hoje</button>}
           <button className="botao leve so-desktop" onClick={() => setConta('nova')}>Nova conta</button>
-          <button className="botao primario so-desktop" onClick={() => setGasto('novo')}><Plus size={16} /> Gasto</button>
+          <button className="botao primario so-desktop" onClick={() => setLancar({ tipo: 'gasto' })}><Plus size={16} /> Lançar</button>
           <button className="perfil-topo so-celular" onClick={() => setPagina('ajustes')} aria-label={'Perfil: ' + v.nome + '. Trocar em Ajustes'}>
             <span className={'avatar ' + cor(v.eu)}>{v.nome.trim()[0]?.toUpperCase() ?? '?'}</span>
             <small>{v.nome.trim().split(' ')[0]}</small>
@@ -100,7 +102,7 @@ export default function App() {
         )}
         {nuvem.erro && <p className="aviso">{nuvem.erro}</p>}
 
-        {pagina === 'geral' && <Geral mes={mes} ir={setPagina} />}
+        {pagina === 'geral' && <Geral mes={mes} ir={setPagina} onLancar={setLancar} onNovaConta={() => setConta('nova')} />}
         {pagina === 'contas' && <Contas mes={mes} onEditar={setConta} />}
         {pagina === 'cartoes' && <Cartoes mes={mes} />}
         {pagina === 'fluxo' && <Fluxo mes={mes} />}
@@ -116,9 +118,11 @@ export default function App() {
           </button>
         ))}
       </nav>
-      <button className="fab" onClick={() => setGasto('novo')} aria-label="Lançar gasto"><Plus size={24} /></button>
+      <button className="fab" onClick={() => setLancar({ tipo: 'gasto' })} aria-label="Novo lançamento"><Plus size={24} /></button>
 
       {gasto && <GastoForm gasto={gasto === 'novo' ? null : gasto} mes={mes} onFechar={() => setGasto(null)} />}
+      {lancar && <LancamentoRapido pedido={lancar} mes={mes} onFechar={() => setLancar(null)} />}
+      <Avisos />
       {conta && <ContaForm conta={conta === 'nova' ? null : conta} mes={mes} onFechar={() => setConta(null)} />}
     </div>
   )

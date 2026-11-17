@@ -1,5 +1,5 @@
 import { X } from 'lucide-react'
-import { useEffect, type ReactNode } from 'react'
+import { useEffect, useState, type ReactNode } from 'react'
 
 export const brl = (v: number) => v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
@@ -86,5 +86,32 @@ export function Check({ marcado, onClick, rotulo }: { marcado: boolean; onClick:
     >
       {marcado && '✓'}
     </button>
+  )
+}
+
+let mostrarAviso: ((texto: string) => void) | null = null
+
+/** Mostra um aviso curto no rodapé da tela (ex.: "R$ 100 lançado no Pix"). */
+export const avisar = (texto: string) => mostrarAviso?.(texto)
+
+/** Onde os avisos aparecem; fica montado uma vez no App. */
+export function Avisos() {
+  const [texto, setTexto] = useState<string | null>(null)
+  useEffect(() => {
+    let timer: number | undefined
+    mostrarAviso = (t) => {
+      setTexto(t)
+      clearTimeout(timer)
+      timer = window.setTimeout(() => setTexto(null), 3500)
+    }
+    return () => {
+      mostrarAviso = null
+      clearTimeout(timer)
+    }
+  }, [])
+  return (
+    <div className="toast-area" role="status" aria-live="polite">
+      {texto && <div className="toast">{texto}</div>}
+    </div>
   )
 }

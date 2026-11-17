@@ -1,4 +1,4 @@
-import { ArrowDownRight, ArrowUpRight, Building2, Check as Ok, Droplets, Flame, House, KeyRound, Landmark, Wifi, Zap, type LucideIcon } from 'lucide-react'
+import { Minus, PiggyBank, Plus, Repeat, ArrowDownRight, ArrowUpRight, Building2, Check as Ok, Droplets, Flame, House, KeyRound, Landmark, Wifi, Zap, type LucideIcon } from 'lucide-react'
 import type { Pagina } from '../App'
 import { useEffect, useState } from 'react'
 import { diasParaGastar, ehConjunta, limiteLivre, resumo, type ItemAPagar } from '../calc'
@@ -7,6 +7,7 @@ import { brl, Check, cor, Ilustracao, nomeDoMes, pct, Valor } from '../ui'
 import { CartaoVisual } from './Cartoes'
 import { ParaOndeFoi } from '../PainelCategorias'
 import { RendaDoMes } from '../Renda'
+import type { PedidoLancamento } from '../Lancamento'
 import { FORMAS, GastoForm } from '../forms'
 import type { Gasto } from '../store'
 
@@ -100,7 +101,7 @@ function ContasAPagar({ mes, itens }: { mes: string; itens: ItemAPagar[] }) {
 }
 
 /** Gastos do dia a dia do mês: quanto da reserva já foi, o que foi para as caixinhas e a lista dos lançamentos. */
-function GastosDoDia({ mes, r, dias }: { mes: string; r: ReturnType<typeof resumo>; dias: number }) {
+function GastosDoDia({ mes, r, dias, onNovo }: { mes: string; r: ReturnType<typeof resumo>; dias: number; onNovo: () => void }) {
   const e = useEstado()
   const [editando, setEditando] = useState<Gasto | 'novo' | null>(null)
   const reserva = r.diaADia
@@ -135,7 +136,7 @@ function GastosDoDia({ mes, r, dias }: { mes: string; r: ReturnType<typeof resum
             {reserva > 0 ? `de ${brl(reserva)} da reserva do mês` : 'Sem reserva definida: defina em Ajustes'} · só você vê
           </p>
         </div>
-        <button className="botao primario" onClick={() => setEditando('novo')}>+ Lançar gasto</button>
+        <button className="botao primario" onClick={onNovo}>+ Lançar gasto</button>
       </div>
 
       {reserva > 0 && (
@@ -174,7 +175,7 @@ function GastosDoDia({ mes, r, dias }: { mes: string; r: ReturnType<typeof resum
   )
 }
 
-export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
+export function Geral({ mes, ir, onLancar, onNovaConta }: { mes: string; ir: (p: Pagina) => void; onLancar: (p: PedidoLancamento) => void; onNovaConta: () => void }) {
   const e = useEstado()
   const r = resumo(e, mes)
   const base = Math.max(r.salario, r.parteCasa + r.pessoais + r.diaADiaUsado + Math.max(r.totalGuardado, 0), 1)
@@ -235,9 +236,16 @@ export function Geral({ mes, ir }: { mes: string; ir: (p: Pagina) => void }) {
           </div>
         </section>
 
+        <section className="acoes-rapidas" aria-label="Lançamentos rápidos">
+          <button onClick={() => onLancar({ tipo: 'gasto' })}><span><Minus size={22} /></span>Gasto</button>
+          <button onClick={() => onLancar({ tipo: 'receita' })}><span><Plus size={22} /></span>Entrada</button>
+          <button onClick={() => onLancar({ tipo: 'gasto', onde: 'caixinha' })}><span><PiggyBank size={22} /></span>Caixinha</button>
+          <button onClick={onNovaConta}><span><Repeat size={22} /></span>Conta fixa</button>
+        </section>
+
         <RendaDoMes mes={mes} r={r} irAjustes={() => ir('ajustes')} />
 
-        <GastosDoDia mes={mes} r={r} dias={dias} />
+        <GastosDoDia mes={mes} r={r} dias={dias} onNovo={() => onLancar({ tipo: 'gasto' })} />
 
         <div className="par">
           <section className="cartao a-divisao">
